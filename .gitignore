@@ -26,6 +26,7 @@ buildNumber.properties
 out/
 .idea
 *.iws
+*.iml
 
 ## ECLIPSE
 .metadata
