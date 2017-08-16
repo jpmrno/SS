@@ -119,7 +119,7 @@ public class CellIndexMethod {
                 particlesPositions);
 
             if (distance < maxDistance
-                && !neighboursParticles.get(currentParticle).contains(particle)) {
+                && !neighboursParticles.get(currentParticle).contains(new Neighbour(particle,distance))) {
               neighboursParticles.get(currentParticle).add(new Neighbour(particle, distance));
               neighboursParticles.get(particle).add(new Neighbour(currentParticle, distance));
             }
