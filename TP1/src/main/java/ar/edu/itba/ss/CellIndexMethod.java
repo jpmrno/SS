@@ -9,12 +9,10 @@ import javafx.geometry.Point2D;
 public class CellIndexMethod {
 
   private final int sideSize;
-  private final double sideLength;
   private final double cellLength;
 
   public CellIndexMethod(final int sideSize, final double sideLength) {
     this.sideSize = sideSize;
-    this.sideLength = sideLength;
     this.cellLength = sideLength / sideSize;
   }
 
@@ -28,19 +26,19 @@ public class CellIndexMethod {
           "Max distance has to be less than cell length (" + cellLength + ").");
     }
 
-    final List<Particle>[][] matrix = createMatrix(particlesPositions);
-    final Map<Particle, List<Neighbour>> neighboursParticles = new HashMap<Particle, List<Neighbour>>();
+    final Map<Particle, List<Neighbour>> neighboursParticles = new HashMap<>();
     for (final Particle particle : particlesPositions.keySet()) {
       neighboursParticles.put(particle, new LinkedList<Neighbour>());
     }
 
+    final List<Particle>[][] matrix = createMatrix(particlesPositions);
     for (int row = 0; row < sideSize; row++) {
       for (int col = 0; col < sideSize; col++) {
         if (matrix[row][col] != null) {
           final List<Particle>[] neighbourCells = getNeighbourCells(matrix, row, col);
 
           for (final Particle particle : matrix[row][col]) {
-            addParticleNeighbours(particle, neighboursParticles, neighbourCells, particlesPositions,
+            addParticleNeighbours(particle, particlesPositions, neighboursParticles, neighbourCells,
                 maxDistance);
           }
         }
@@ -52,13 +50,14 @@ public class CellIndexMethod {
 
   private List<Particle>[][] createMatrix(final Map<Particle, Point2D> particlesPositions) {
     final List<Particle>[][] matrix = new List[sideSize][sideSize];
+
     for (final Particle particle : particlesPositions.keySet()) {
       final Point2D position = particlesPositions.get(particle);
-      int row = (int) position.getY();
-      int col = (int) position.getX();
+      final int row = (int) (position.getY() / cellLength);
+      final int col = (int) (position.getX() / cellLength);
 
       if (matrix[row][col] == null) {
-        matrix[row][col] = new LinkedList<Particle>();
+        matrix[row][col] = new LinkedList<>();
       }
 
       matrix[row][col].add(particle);
@@ -107,18 +106,17 @@ public class CellIndexMethod {
   }
 
   private void addParticleNeighbours(final Particle currentParticle,
+      final Map<Particle, Point2D> particlesPositions,
       final Map<Particle, List<Neighbour>> neighboursParticles,
       final List<Particle>[] neighbourCells,
-      final Map<Particle, Point2D> particlesPositions,
       final double maxDistance) {
 
     for (final List<Particle> neighbourCell : neighbourCells) {
       if (neighbourCell != null) {
         for (final Particle particle : neighbourCell) {
           if (currentParticle != particle) {
-            final double distance = particlesPositions.get(currentParticle)
-                .distance(particlesPositions.get(particle)) - currentParticle.getRadius() - particle
-                .getRadius();
+            final double distance = getDistance(currentParticle, particle,
+                particlesPositions);
 
             if (distance < maxDistance
                 && !neighboursParticles.get(currentParticle).contains(particle)) {
@@ -131,4 +129,9 @@ public class CellIndexMethod {
     }
   }
 
+  private double getDistance(final Particle particle1, final Particle particle2,
+      final Map<Particle, Point2D> particlesPositions) {
+    return particlesPositions.get(particle1).distance(particlesPositions.get(particle2))
+        - particle1.getRadius() - particle2.getRadius();
+  }
 }
