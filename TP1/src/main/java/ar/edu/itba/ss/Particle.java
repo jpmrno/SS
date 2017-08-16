@@ -2,13 +2,13 @@ package ar.edu.itba.ss;
 
 public class Particle {
 
-  private final int radius;
+  private final double radius;
 
-  public Particle(final int radius) {
+  public Particle(final double radius) {
     this.radius = radius;
   }
 
-  public int getRadius() {
+  public double getRadius() {
     return radius;
   }
 }
