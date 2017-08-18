@@ -16,6 +16,10 @@ public class Particle {
     return radius;
   }
 
+  public int getId() {
+    return id;
+  }
+
   @Override
   public String toString() {
     return "Particle#" + id + "{" +

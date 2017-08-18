@@ -79,7 +79,7 @@ public class CellIndexMethod {
     // Down and right
     if (row == sideSize - 1) {
       if (col == sideSize - 1) {
-        neighbourCells[3] = matrix[row + 1][col + 1];
+        neighbourCells[3] = matrix[0][0];
       } else {
         neighbourCells[3] = matrix[0][col + 1];
       }
@@ -99,7 +99,7 @@ public class CellIndexMethod {
     } else if (col == 0) {
       neighbourCells[4] = matrix[row + 1][sideSize - 1];
     } else {
-      neighbourCells[4] = matrix[row - 1][col - 1];
+      neighbourCells[4] = matrix[row + 1][col - 1];
     }
 
     return neighbourCells;
