@@ -9,10 +9,12 @@ import javafx.geometry.Point2D;
 public class CellIndexMethod {
 
   private final int sideSize;
+  private final double sideLength;
   private final double cellLength;
 
   public CellIndexMethod(final int sideSize, final double sideLength) {
     this.sideSize = sideSize;
+    this.sideLength = sideLength;
     this.cellLength = sideLength / sideSize;
   }
 
@@ -131,7 +133,23 @@ public class CellIndexMethod {
 
   private double getDistance(final Particle particle1, final Particle particle2,
       final Map<Particle, Point2D> particlesPositions) {
-    return particlesPositions.get(particle1).distance(particlesPositions.get(particle2))
-        - particle1.getRadius() - particle2.getRadius();
+    Point2D position1 = particlesPositions.get(particle1);
+    Point2D position2 = particlesPositions.get(particle2);
+    double x1 = position1.getX();
+    double x2 = position2.getX();
+    double y1 = position1.getY();
+    double y2 = position2.getY();
+
+    if(x1 > sideLength-cellLength && x2 < cellLength){
+      x2 += sideLength;
+    } else if(x1 < cellLength && x2 > sideLength-cellLength){
+      x1 += sideLength;
+    }
+
+    if(y1 > sideLength-cellLength && y2 < cellLength){
+      y2 += sideLength;
+    }
+
+    return (new Point2D(x1,y1)).distance(x2,y2) - particle1.getRadius() - particle2.getRadius();
   }
 }
