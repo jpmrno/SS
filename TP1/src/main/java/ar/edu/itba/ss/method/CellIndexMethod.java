@@ -1,5 +1,7 @@
-package ar.edu.itba.ss;
+package ar.edu.itba.ss.method;
 
+import ar.edu.itba.ss.model.Neighbour;
+import ar.edu.itba.ss.model.Particle;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -8,7 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import javafx.geometry.Point2D;
 
-public class CellIndexMethod {
+public class CellIndexMethod implements NeighbourFindingMethod {
 
   private final static int[][] DIRECTIONS = new int[][]{
       {0, 0},     // CURRENT
@@ -35,6 +37,7 @@ public class CellIndexMethod {
   /**
    * @param particlesPositions positions of the particles, x as col and y as row
    */
+  @Override
   public Map<Particle, Set<Neighbour>> apply(final Map<Particle, Point2D> particlesPositions,
       final double rc) {
 

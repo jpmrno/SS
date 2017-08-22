@@ -1,5 +1,7 @@
-package ar.edu.itba.ss;
+package ar.edu.itba.ss.io;
 
+import ar.edu.itba.ss.model.Neighbour;
+import ar.edu.itba.ss.model.Particle;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
