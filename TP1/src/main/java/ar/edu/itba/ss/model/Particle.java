@@ -8,12 +8,16 @@ public class Particle {
   private final int id;
 
   public Particle(final double radius) {
+    this(total++, radius);
+  }
+
+  public Particle(final int id, final double radius) {
     if (radius < 0) {
       throw new IllegalArgumentException("Radius can't be less than 0");
     }
 
     this.radius = radius;
-    this.id = total++;
+    this.id = id;
   }
 
   public double getRadius() {

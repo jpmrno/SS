@@ -98,8 +98,10 @@ public class CellIndexMethod implements NeighbourFindingMethod {
         final List<Particle> neighbourCell = matrix[Math.floorMod(neighbourRow, m)][Math
             .floorMod(neighbourCol, m)];
 
-        addNeighboursFromCell(neighbours, currentCell, neighbourCell, neighbourRow, neighbourCol,
-            particlesPositions, rc);
+        if (neighbourCell != null) {
+          addNeighboursFromCell(neighbours, currentCell, neighbourCell, neighbourRow, neighbourCol,
+              particlesPositions, rc);
+        }
       }
     }
   }
@@ -115,8 +117,8 @@ public class CellIndexMethod implements NeighbourFindingMethod {
           // Remember: col is x and row is y
           final Point2D point2 = particlesPositions.get(particle2)
               .add(coordinateCorrection(neighbourCol), coordinateCorrection(neighbourRow));
-          final double distance =
-              point1.distance(point2) - particle1.getRadius() - particle2.getRadius();
+          final double distance = NeighbourFindingMethod
+              .distance(particle1, point1, particle2, point2);
 
           if (distance <= rc) {
             neighbours.get(particle1).add(new Neighbour(particle2, distance));

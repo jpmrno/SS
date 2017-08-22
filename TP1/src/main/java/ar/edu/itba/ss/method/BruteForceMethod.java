@@ -27,8 +27,8 @@ public class BruteForceMethod implements NeighbourFindingMethod {
         if (!particle1.equals(particle2)) {
           final Point2D point1 = particlesPositions.get(particle1);
           final Point2D point2 = particlesPositions.get(particle2);
-          final double distance =
-              point1.distance(point2) - particle1.getRadius() - particle2.getRadius();
+          final double distance = NeighbourFindingMethod
+              .distance(particle1, point1, particle2, point2);
 
           if (distance <= rc) {
             neighboursParticles.get(particle1).add(new Neighbour(particle2, distance));
