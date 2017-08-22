@@ -12,7 +12,7 @@ import javafx.geometry.Point2D;
 public class Main {
 
   public static void main(String[] args) {
-    final CellIndexMethod cellIndexMethod = new CellIndexMethod(5, 10, true);
+    final CellIndexMethod cellIndexMethod = new CellIndexMethod(20, true);
     final Map<Particle, Point2D> positions = new HashMap<>();
     for (double i = 0.5; i < 10; i++) {
       for (double j = 0.5; j < 10; j++) {

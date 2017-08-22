@@ -2,12 +2,7 @@ package ar.edu.itba.ss.method;
 
 import ar.edu.itba.ss.model.Neighbour;
 import ar.edu.itba.ss.model.Particle;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import javafx.geometry.Point2D;
 
 public class CellIndexMethod implements NeighbourFindingMethod {
@@ -22,15 +17,13 @@ public class CellIndexMethod implements NeighbourFindingMethod {
   private final static int DIRECTIONS_ROW = 0;
   private final static int DIRECTIONS_COL = 1;
 
-  private final int m;
+  private int m;
   private final double l;
-  private final double cellLength;
+  private double cellLength;
   private final boolean periodic;
 
-  public CellIndexMethod(final int m, final double l, final boolean periodic) {
-    this.m = m;
+  public CellIndexMethod(final double l, final boolean periodic) {
     this.l = l;
-    this.cellLength = l / m;
     this.periodic = periodic;
   }
 
@@ -40,6 +33,9 @@ public class CellIndexMethod implements NeighbourFindingMethod {
   @Override
   public Map<Particle, Set<Neighbour>> apply(final Map<Particle, Point2D> particlesPositions,
       final double rc) {
+
+    this.m = (int) (l / (rc + 2 * particlesPositions.keySet().stream().parallel().max(Comparator.comparingDouble(Particle::getRadius)).get().getRadius()));
+    this.cellLength = l / m;
 
     if (rc >= cellLength) {
       throw new IllegalArgumentException(
