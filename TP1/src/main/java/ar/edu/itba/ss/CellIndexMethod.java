@@ -1,48 +1,58 @@
 package ar.edu.itba.ss;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javafx.geometry.Point2D;
 
 public class CellIndexMethod {
 
-  private final int sideSize;
-  private final double sideLength;
-  private final double cellLength;
+  private final static int[][] DIRECTIONS = new int[][]{
+      {0, 0},     // CURRENT
+      {-1, 0},    // UP
+      {-1, +1},   // UP-RIGHT
+      {0, +1},    // RIGHT
+      {+1, +1}    // DOWN-RIGHT
+  };
+  private final static int DIRECTIONS_ROW = 0;
+  private final static int DIRECTIONS_COL = 1;
 
-  public CellIndexMethod(final int sideSize, final double sideLength) {
-    this.sideSize = sideSize;
-    this.sideLength = sideLength;
-    this.cellLength = sideLength / sideSize;
+  private final int m;
+  private final double l;
+  private final double cellLength;
+  private final boolean periodic;
+
+  public CellIndexMethod(final int m, final double l, final boolean periodic) {
+    this.m = m;
+    this.l = l;
+    this.cellLength = l / m;
+    this.periodic = periodic;
   }
 
   /**
    * @param particlesPositions positions of the particles, x as col and y as row
    */
-  public Map<Particle, List<Neighbour>> apply(final Map<Particle, Point2D> particlesPositions,
-      final double maxDistance) {
-    if (cellLength <= maxDistance) {
+  public Map<Particle, Set<Neighbour>> apply(final Map<Particle, Point2D> particlesPositions,
+      final double rc) {
+
+    if (rc >= cellLength) {
       throw new IllegalArgumentException(
-          "Max distance has to be less than cell length (" + cellLength + ").");
+          "Cutoff distance has to be less than cell length (" + cellLength + ").");
     }
 
-    final Map<Particle, List<Neighbour>> neighboursParticles = new HashMap<>();
+    final Map<Particle, Set<Neighbour>> neighboursParticles = new HashMap<>();
     for (final Particle particle : particlesPositions.keySet()) {
-      neighboursParticles.put(particle, new LinkedList<Neighbour>());
+      neighboursParticles.put(particle, new HashSet<>());
     }
 
     final List<Particle>[][] matrix = createMatrix(particlesPositions);
-    for (int row = 0; row < sideSize; row++) {
-      for (int col = 0; col < sideSize; col++) {
+    for (int row = 0; row < m; row++) {
+      for (int col = 0; col < m; col++) {
         if (matrix[row][col] != null) {
-          final List<Particle>[] neighbourCells = getNeighbourCells(matrix, row, col);
-
-          for (final Particle particle : matrix[row][col]) {
-            addParticleNeighbours(particle, particlesPositions, neighboursParticles, neighbourCells,
-                maxDistance);
-          }
+          addNeighbours(neighboursParticles, matrix, row, col, particlesPositions, rc);
         }
       }
     }
@@ -51,7 +61,7 @@ public class CellIndexMethod {
   }
 
   private List<Particle>[][] createMatrix(final Map<Particle, Point2D> particlesPositions) {
-    final List<Particle>[][] matrix = new List[sideSize][sideSize];
+    final List<Particle>[][] matrix = new List[m][m];
 
     for (final Particle particle : particlesPositions.keySet()) {
       final Point2D position = particlesPositions.get(particle);
@@ -68,88 +78,61 @@ public class CellIndexMethod {
     return matrix;
   }
 
-  private List<Particle>[] getNeighbourCells(final List<Particle>[][] matrix, final int row,
-      final int col) {
-    final List<Particle>[] neighbourCells = new LinkedList[5];
+  private void addNeighbours(final Map<Particle, Set<Neighbour>> neighbours,
+      final List<Particle>[][] matrix, final int currentRow, final int currentCol,
+      final Map<Particle, Point2D> particlesPositions, final double rc) {
 
-    neighbourCells[0] = matrix[row][col];
+    final List<Particle> currentCell = matrix[currentRow][currentCol];
 
-    neighbourCells[1] = row == sideSize - 1 ? matrix[0][col] : matrix[row + 1][col];
+    for (final int[] direction : DIRECTIONS) {
+      final int neighbourRow = currentRow + direction[DIRECTIONS_ROW];
+      final int neighbourCol = currentCol + direction[DIRECTIONS_COL];
 
-    neighbourCells[2] = col == sideSize - 1 ? matrix[row][0] : matrix[row][col + 1];
+      // Skip if not periodic and row/col are out of bounds
+      if (periodic || (neighbourRow >= 0 && neighbourRow < m && neighbourCol >= 0
+          && neighbourCol < m)) {
 
-    // Down and right
-    if (row == sideSize - 1) {
-      if (col == sideSize - 1) {
-        neighbourCells[3] = matrix[0][0];
-      } else {
-        neighbourCells[3] = matrix[0][col + 1];
+        final List<Particle> neighbourCell = matrix[Math.floorMod(neighbourRow, m)][Math
+            .floorMod(neighbourCol, m)];
+
+        addNeighboursFromCell(neighbours, currentCell, neighbourCell, neighbourRow, neighbourCol,
+            particlesPositions, rc);
       }
-    } else if (col == sideSize - 1) {
-      neighbourCells[3] = matrix[row + 1][0];
-    } else {
-      neighbourCells[3] = matrix[row + 1][col + 1];
     }
-
-    // Down and left
-    if (row == sideSize - 1) {
-      if (col == 0) {
-        neighbourCells[4] = matrix[0][sideSize - 1];
-      } else {
-        neighbourCells[4] = matrix[0][col - 1];
-      }
-    } else if (col == 0) {
-      neighbourCells[4] = matrix[row + 1][sideSize - 1];
-    } else {
-      neighbourCells[4] = matrix[row + 1][col - 1];
-    }
-
-    return neighbourCells;
   }
 
-  private void addParticleNeighbours(final Particle currentParticle,
-      final Map<Particle, Point2D> particlesPositions,
-      final Map<Particle, List<Neighbour>> neighboursParticles,
-      final List<Particle>[] neighbourCells,
-      final double maxDistance) {
+  private void addNeighboursFromCell(final Map<Particle, Set<Neighbour>> neighbours,
+      final List<Particle> currentCell, final List<Particle> neighbourCell, final int neighbourRow,
+      final int neighbourCol, final Map<Particle, Point2D> particlesPositions, final double rc) {
 
-    for (final List<Particle> neighbourCell : neighbourCells) {
-      if (neighbourCell != null) {
-        for (final Particle particle : neighbourCell) {
-          if (currentParticle != particle) {
-            final double distance = getDistance(currentParticle, particle,
-                particlesPositions);
+    for (final Particle particle1 : currentCell) {
+      for (final Particle particle2 : neighbourCell) {
+        if (!particle1.equals(particle2)) {
+          final Point2D point1 = particlesPositions.get(particle1);
+          // Remember: col is x and row is y
+          final Point2D point2 = particlesPositions.get(particle2)
+              .add(coordinateCorrection(neighbourCol), coordinateCorrection(neighbourRow));
+          final double distance =
+              point1.distance(point2) - particle1.getRadius() - particle2.getRadius();
 
-            if (distance < maxDistance
-                && !neighboursParticles.get(currentParticle).contains(new Neighbour(particle,distance))) {
-              neighboursParticles.get(currentParticle).add(new Neighbour(particle, distance));
-              neighboursParticles.get(particle).add(new Neighbour(currentParticle, distance));
-            }
+          if (distance <= rc) {
+            neighbours.get(particle1).add(new Neighbour(particle2, distance));
+            neighbours.get(particle2).add(new Neighbour(particle1, distance));
           }
         }
       }
     }
   }
 
-  private double getDistance(final Particle particle1, final Particle particle2,
-      final Map<Particle, Point2D> particlesPositions) {
-    Point2D position1 = particlesPositions.get(particle1);
-    Point2D position2 = particlesPositions.get(particle2);
-    double x1 = position1.getX();
-    double x2 = position2.getX();
-    double y1 = position1.getY();
-    double y2 = position2.getY();
-
-    if(x1 > sideLength-cellLength && x2 < cellLength){
-      x2 += sideLength;
-    } else if(x1 < cellLength && x2 > sideLength-cellLength){
-      x1 += sideLength;
+  private double coordinateCorrection(final int cellIndex) {
+    if (cellIndex < 0) {
+      return -l;
     }
 
-    if(y1 > sideLength-cellLength && y2 < cellLength){
-      y2 += sideLength;
+    if (cellIndex >= m) {
+      return l;
     }
 
-    return (new Point2D(x1,y1)).distance(x2,y2) - particle1.getRadius() - particle2.getRadius();
+    return 0;
   }
 }

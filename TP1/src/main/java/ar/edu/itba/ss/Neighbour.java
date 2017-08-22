@@ -1,12 +1,18 @@
 package ar.edu.itba.ss;
 
+import java.util.Objects;
+
 public class Neighbour {
 
   private final Particle neighbourParticle;
   private final double distance;
 
   public Neighbour(final Particle neighbourParticle, final double distance) {
-    this.neighbourParticle = neighbourParticle;
+    if (distance < 0) {
+      throw new IllegalArgumentException("Distance can't be less than 0");
+    }
+
+    this.neighbourParticle = Objects.requireNonNull(neighbourParticle);
     this.distance = distance;
   }
 
@@ -19,14 +25,31 @@ public class Neighbour {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+  public boolean equals(final Object o) {
+    if (this == o) {
+      return true;
+    }
 
-    Neighbour neighbour = (Neighbour) o;
+    if (!(o instanceof Neighbour)) {
+      return false;
+    }
 
-    return neighbour.getDistance() == this.distance &&
-            neighbour.getNeighbourParticle() == this.neighbourParticle;
+    final Neighbour neighbour = (Neighbour) o;
+
+    if (Double.compare(neighbour.distance, distance) != 0) {
+      return false;
+    }
+
+    return neighbourParticle.equals(neighbour.neighbourParticle);
   }
 
+  @Override
+  public int hashCode() {
+    int result = neighbourParticle.hashCode();
+    final long temp = Double.doubleToLongBits(distance);
+
+    result = 31 * result + (int) (temp ^ (temp >>> 32));
+
+    return result;
+  }
 }
