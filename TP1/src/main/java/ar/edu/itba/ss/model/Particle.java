@@ -14,6 +14,7 @@ public interface Particle {
   Point2D position();
 
   @Value.Auxiliary
+  @Value.Default
   default Point2D velocity() {
     return Point2D.ZERO;
   }

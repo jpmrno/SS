@@ -87,7 +87,8 @@ public class ParticlesFiles {
         }
 
         particles.add(
-            ImmutableParticle.builder().id(id).radius(r).position(new Point2D(x, y)).build());
+            ImmutableParticle.builder().id(id).radius(r).position(new Point2D(x, y))
+                .velocity(new Point2D(vx, vy)).build());
       }
     }
 
