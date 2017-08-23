@@ -75,7 +75,7 @@ public class CellIndexMethod implements NeighbourFindingMethod {
       throw new IllegalArgumentException("Invalid particles");
     }
 
-    return apply(particles, maxParticle.get().radius());
+    return apply(particles, maxParticle.get().radius(), rc);
   }
 
   private List<Particle>[][] createMatrix(final List<Particle> particles) {
