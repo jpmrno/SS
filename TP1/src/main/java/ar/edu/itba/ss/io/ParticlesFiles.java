@@ -20,7 +20,8 @@ public class ParticlesFiles {
       writer.write(time + "\n");
       for (final Particle particle : particles) {
         writer.write(particle.id() + "  " + particle.radius() + "  " + particle.position().getX()
-            + "  " + particle.position().getY() + "\n");
+            + "  " + particle.position().getY() + "  " + particle.velocity().getX() + "  "
+            + particle.velocity().getY() + "\n");
       }
     }
   }
@@ -62,8 +63,8 @@ public class ParticlesFiles {
           throw new IllegalArgumentException("Missing particles");
         }
 
-        final String[] coordinateStrings = line.trim().split("\\s+", 4);
-        if (coordinateStrings.length != 4) {
+        final String[] properties = line.trim().split("\\s+", 6);
+        if (properties.length != 6) {
           throw new IllegalArgumentException("Invalid particle's properties");
         }
 
@@ -71,11 +72,15 @@ public class ParticlesFiles {
         final double r;
         final double x;
         final double y;
+        final double vx;
+        final double vy;
         try {
-          id = Integer.parseInt(coordinateStrings[0]);
-          r = Double.parseDouble(coordinateStrings[1]);
-          x = Double.parseDouble(coordinateStrings[2]);
-          y = Double.parseDouble(coordinateStrings[3]);
+          id = Integer.parseInt(properties[0]);
+          r = Double.parseDouble(properties[1]);
+          x = Double.parseDouble(properties[2]);
+          y = Double.parseDouble(properties[3]);
+          vx = Double.parseDouble(properties[4]);
+          vy = Double.parseDouble(properties[5]);
         } catch (final NumberFormatException exception) {
           exception.printStackTrace();
           throw new IllegalArgumentException("Invalid particle's properties");

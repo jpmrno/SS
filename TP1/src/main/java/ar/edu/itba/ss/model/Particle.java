@@ -12,4 +12,9 @@ public interface Particle {
 
   @Value.Auxiliary
   Point2D position();
+
+  @Value.Auxiliary
+  default Point2D velocity() {
+    return Point2D.ZERO;
+  }
 }
