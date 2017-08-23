@@ -30,7 +30,13 @@ public class CellIndexMethod implements NeighbourFindingMethod {
   @Override
   public Map<Particle, Set<Neighbour>> apply(final List<Particle> particles, final double rc) {
 
-    this.m = (int) (l / (rc + 2 * particles.stream().parallel().max(Comparator.comparingDouble(Particle::radius)).get().radius()));
+    final Optional<Particle> maxParticle = particles.stream().parallel()
+        .max(Comparator.comparingDouble(Particle::radius));
+    if (!maxParticle.isPresent()) {
+      throw new IllegalArgumentException("Invalid particles");
+    }
+
+    this.m = (int) Math.ceil((l / (rc + 2 * maxParticle.get().radius())));
     this.cellLength = l / m;
 
     if (rc >= cellLength) {
