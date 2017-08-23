@@ -1,7 +1,7 @@
 package ar.edu.itba.ss;
 
 import ar.edu.itba.ss.io.MatlabFileWriter;
-import ar.edu.itba.ss.io.SSParticlesFileReader;
+import ar.edu.itba.ss.io.ParticlesFiles;
 import ar.edu.itba.ss.method.BruteForceMethod;
 import ar.edu.itba.ss.method.CellIndexMethod;
 import ar.edu.itba.ss.method.NeighbourFindingMethod;
@@ -18,7 +18,7 @@ public class FileMain {
   public static void main(final String[] args) {
     List<Particle> particles = null;
     try {
-      particles = SSParticlesFileReader.read(
+      particles = ParticlesFiles.read(
           FileSystems.getDefault().getPath("example.txt"));
     } catch (IOException e) {
       e.printStackTrace();

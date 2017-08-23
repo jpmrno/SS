@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javafx.geometry.Point2D;
 
-public class SSParticlesFileReader {
+public class ParticlesFiles {
 
   public static void write(final Path path, final double time, final List<Particle> particles)
       throws IOException {
