@@ -55,10 +55,22 @@ public class OffLaticeAutomata implements Runnable {
     }
   }
 
-//  TODO: validate position
   private Point2D calculateNewPosition(Particle particle) {
     double x = particle.position().getX() + particle.velocity().getX() * dt;
     double y = particle.position().getY() + particle.velocity().getY() * dt;
+
+    if(x > l){
+      x -= l;
+    } else if (x < 0){
+      x += l;
+    }
+
+    if(y > l){
+      y -= l;
+    } else if (y < 0){
+      y += l;
+    }
+
     return new Point2D(x, y);
   }
 
