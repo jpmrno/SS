@@ -58,7 +58,7 @@ public class CellIndexMethod implements NeighbourFindingMethod {
     for (int row = 0; row < m; row++) {
       for (int col = 0; col < m; col++) {
         if (matrix[row][col] != null) {
-          addNeighbours(neighboursParticles, matrix, row, col, particles, rc);
+          addNeighbours(neighboursParticles, matrix, row, col, rc);
         }
       }
     }
@@ -97,8 +97,7 @@ public class CellIndexMethod implements NeighbourFindingMethod {
   }
 
   private void addNeighbours(final Map<Particle, Set<Neighbour>> neighbours,
-      final List<Particle>[][] matrix, final int currentRow, final int currentCol,
-      final List<Particle> particles, final double rc) {
+      final List<Particle>[][] matrix, final int currentRow, final int currentCol, final double rc) {
 
     final List<Particle> currentCell = matrix[currentRow][currentCol];
 
@@ -115,7 +114,7 @@ public class CellIndexMethod implements NeighbourFindingMethod {
 
         if (neighbourCell != null) {
           addNeighboursFromCell(neighbours, currentCell, neighbourCell, neighbourRow, neighbourCol,
-              particles, rc);
+              rc);
         }
       }
     }
@@ -123,7 +122,7 @@ public class CellIndexMethod implements NeighbourFindingMethod {
 
   private void addNeighboursFromCell(final Map<Particle, Set<Neighbour>> neighbours,
       final List<Particle> currentCell, final List<Particle> neighbourCell, final int neighbourRow,
-      final int neighbourCol, final List<Particle> particles, final double rc) {
+      final int neighbourCol, final double rc) {
 
     for (final Particle particle1 : currentCell) {
       for (final Particle particle2 : neighbourCell) {

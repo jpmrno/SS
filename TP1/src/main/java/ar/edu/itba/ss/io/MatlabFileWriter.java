@@ -38,7 +38,7 @@ public class MatlabFileWriter {
       for (Set<Neighbour> neighbourList : neighbours.values()) {
         neighboursStr += "[";
         for (Neighbour neighbour : neighbourList) {
-          neighboursStr += neighbour.getNeighbourParticle().id() + 1 + ", ";
+          neighboursStr += neighbour.getNeighbourParticle().id() + ", ";
         }
         neighboursStr += "], ";
       }
