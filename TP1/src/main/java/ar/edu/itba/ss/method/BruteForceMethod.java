@@ -2,7 +2,11 @@ package ar.edu.itba.ss.method;
 
 import ar.edu.itba.ss.model.Neighbour;
 import ar.edu.itba.ss.model.Particle;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javafx.geometry.Point2D;
 
 public class BruteForceMethod implements NeighbourFindingMethod {

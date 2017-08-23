@@ -5,7 +5,10 @@ import ar.edu.itba.ss.model.Particle;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.*;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javafx.geometry.Point2D;
 
@@ -15,7 +18,8 @@ public class MatlabFileWriter {
     writeNeighbourParticlesFile("./default", neighbours);
   }
 
-  public void writeNeighbourParticlesFile(String filename, Map<Particle, Set<Neighbour>> neighbours) {
+  public void writeNeighbourParticlesFile(String filename,
+      Map<Particle, Set<Neighbour>> neighbours) {
 
     neighbours = neighbours.entrySet().stream()
         .sorted(Comparator.comparingInt(o -> o.getKey().id()))
@@ -24,7 +28,8 @@ public class MatlabFileWriter {
 
     try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename + ".m"))) {
       String positionsStr = "positions = [";
-      for (Point2D position : neighbours.keySet().stream().map(Particle::position).collect(Collectors.toList())) {
+      for (Point2D position : neighbours.keySet().stream().map(Particle::position)
+          .collect(Collectors.toList())) {
         positionsStr += position.getX() + " " + position.getY() + "; ";
       }
       positionsStr += "];\n";

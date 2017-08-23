@@ -2,7 +2,14 @@ package ar.edu.itba.ss.method;
 
 import ar.edu.itba.ss.model.Neighbour;
 import ar.edu.itba.ss.model.Particle;
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import javafx.geometry.Point2D;
 
 public class CellIndexMethod implements NeighbourFindingMethod {
@@ -17,26 +24,24 @@ public class CellIndexMethod implements NeighbourFindingMethod {
   private final static int DIRECTIONS_ROW = 0;
   private final static int DIRECTIONS_COL = 1;
 
-  private int m;
   private final double l;
-  private double cellLength;
   private final boolean periodic;
+  private int m;
+  private double cellLength;
 
   public CellIndexMethod(final double l, final boolean periodic) {
     this.l = l;
     this.periodic = periodic;
   }
 
-  @Override
-  public Map<Particle, Set<Neighbour>> apply(final List<Particle> particles, final double rc) {
+  public Map<Particle, Set<Neighbour>> apply(final List<Particle> particles, final double maxRadius,
+      final double rc) {
 
-    final Optional<Particle> maxParticle = particles.stream().parallel()
-        .max(Comparator.comparingDouble(Particle::radius));
-    if (!maxParticle.isPresent()) {
-      throw new IllegalArgumentException("Invalid particles");
+    if (maxRadius < 0) {
+      throw new IllegalArgumentException("Invalid max radius");
     }
 
-    this.m = (int) Math.ceil((l / (rc + 2 * maxParticle.get().radius())));
+    this.m = (int) Math.ceil(l / (rc + 2 * maxRadius));
     this.cellLength = l / m;
 
     if (rc >= cellLength) {
@@ -45,7 +50,7 @@ public class CellIndexMethod implements NeighbourFindingMethod {
     }
 
     final Map<Particle, Set<Neighbour>> neighboursParticles = new HashMap<>();
-    for (final Particle particle : particles){
+    for (final Particle particle : particles) {
       neighboursParticles.put(particle, new HashSet<>());
     }
 
@@ -59,6 +64,18 @@ public class CellIndexMethod implements NeighbourFindingMethod {
     }
 
     return neighboursParticles;
+  }
+
+  @Override
+  public Map<Particle, Set<Neighbour>> apply(final List<Particle> particles, final double rc) {
+
+    final Optional<Particle> maxParticle = particles.stream().parallel()
+        .max(Comparator.comparingDouble(Particle::radius));
+    if (!maxParticle.isPresent()) {
+      throw new IllegalArgumentException("Invalid particles");
+    }
+
+    return apply(particles, maxParticle.get().radius());
   }
 
   private List<Particle>[][] createMatrix(final List<Particle> particles) {
@@ -80,8 +97,8 @@ public class CellIndexMethod implements NeighbourFindingMethod {
   }
 
   private void addNeighbours(final Map<Particle, Set<Neighbour>> neighbours,
-                             final List<Particle>[][] matrix, final int currentRow, final int currentCol,
-                             final List<Particle> particles, final double rc) {
+      final List<Particle>[][] matrix, final int currentRow, final int currentCol,
+      final List<Particle> particles, final double rc) {
 
     final List<Particle> currentCell = matrix[currentRow][currentCol];
 
@@ -105,8 +122,8 @@ public class CellIndexMethod implements NeighbourFindingMethod {
   }
 
   private void addNeighboursFromCell(final Map<Particle, Set<Neighbour>> neighbours,
-                                     final List<Particle> currentCell, final List<Particle> neighbourCell, final int neighbourRow,
-                                     final int neighbourCol, final List<Particle> particles, final double rc) {
+      final List<Particle> currentCell, final List<Particle> neighbourCell, final int neighbourRow,
+      final int neighbourCol, final List<Particle> particles, final double rc) {
 
     for (final Particle particle1 : currentCell) {
       for (final Particle particle2 : neighbourCell) {

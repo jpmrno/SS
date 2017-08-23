@@ -7,12 +7,14 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import javafx.geometry.Point2D;
 
 public class SSParticlesFileReader {
 
-  public static void write(final Path path, final double time, final List<Particle> particles) throws IOException {
+  public static void write(final Path path, final double time, final List<Particle> particles)
+      throws IOException {
     try (final BufferedWriter writer = Files.newBufferedWriter(path)) {
       writer.write(particles.size() + "\n");
       writer.write(time + "\n");
@@ -35,7 +37,7 @@ public class SSParticlesFileReader {
 
       final int size;
       try {
-        size = Integer.valueOf(line.trim());
+        size = Integer.parseInt(line.trim());
       } catch (final NumberFormatException exception) {
         throw new IllegalArgumentException("Invalid size");
       }
@@ -46,7 +48,7 @@ public class SSParticlesFileReader {
 
       final double time;
       try {
-        time = Double.valueOf(line.trim());
+        time = Double.parseDouble(line.trim());
       } catch (final NumberFormatException exception) {
         throw new IllegalArgumentException("Invalid time");
       }
@@ -70,10 +72,10 @@ public class SSParticlesFileReader {
         final double x;
         final double y;
         try {
-          id = Integer.valueOf(coordinateStrings[0]);
-          r = Double.valueOf(coordinateStrings[1]);
-          x = Double.valueOf(coordinateStrings[2]);
-          y = Double.valueOf(coordinateStrings[3]);
+          id = Integer.parseInt(coordinateStrings[0]);
+          r = Double.parseDouble(coordinateStrings[1]);
+          x = Double.parseDouble(coordinateStrings[2]);
+          y = Double.parseDouble(coordinateStrings[3]);
         } catch (final NumberFormatException exception) {
           exception.printStackTrace();
           throw new IllegalArgumentException("Invalid particle's properties");

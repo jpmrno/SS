@@ -5,7 +5,6 @@ import ar.edu.itba.ss.model.Particle;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javafx.geometry.Point2D;
 
 public interface NeighbourFindingMethod {
 

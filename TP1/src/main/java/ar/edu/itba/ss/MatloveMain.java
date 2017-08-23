@@ -5,7 +5,10 @@ import ar.edu.itba.ss.method.CellIndexMethod;
 import ar.edu.itba.ss.model.ImmutableParticle;
 import ar.edu.itba.ss.model.Neighbour;
 import ar.edu.itba.ss.model.Particle;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javafx.geometry.Point2D;
 
 public class MatloveMain {
@@ -16,7 +19,9 @@ public class MatloveMain {
     final List<Particle> particles = new LinkedList<>();
     for (double i = 0.5, id = 0; i < 10; i++) {
       for (double j = 0.5; j < 10; j++, id++) {
-        particles.add(ImmutableParticle.builder().id((int)id).radius(0.5).position(new Point2D(i, j)).build());
+        particles.add(
+            ImmutableParticle.builder().id((int) id).radius(0.5).position(new Point2D(i, j))
+                .build());
       }
     }
 

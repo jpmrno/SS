@@ -10,5 +10,6 @@ public interface Particle {
 
   double radius();
 
+  @Value.Auxiliary
   Point2D position();
 }
