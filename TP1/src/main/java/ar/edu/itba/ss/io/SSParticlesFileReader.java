@@ -1,18 +1,30 @@
 package ar.edu.itba.ss.io;
 
+import ar.edu.itba.ss.model.ImmutableParticle;
 import ar.edu.itba.ss.model.Particle;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import javafx.geometry.Point2D;
 
 public class SSParticlesFileReader {
 
-  public static Map<Particle, Point2D> read(final Path path) throws IOException {
-    final Map<Particle, Point2D> ret = new HashMap<>();
+  public static void write(final Path path, final double time, final List<Particle> particles) throws IOException {
+    try (final BufferedWriter writer = Files.newBufferedWriter(path)) {
+      writer.write(particles.size() + "\n");
+      writer.write(time + "\n");
+      for (final Particle particle : particles) {
+        writer.write(particle.id() + "  " + particle.radius() + "  " + particle.position().getX()
+            + "  " + particle.position().getY() + "\n");
+      }
+    }
+  }
+
+  public static List<Particle> read(final Path path) throws IOException {
+    final List<Particle> particles;
 
     try (final BufferedReader reader = Files.newBufferedReader(path)) {
       String line = reader.readLine();
@@ -39,6 +51,8 @@ public class SSParticlesFileReader {
         throw new IllegalArgumentException("Invalid time");
       }
 
+      particles = new ArrayList<>(size);
+
       for (int i = 0; i < size; i++) {
         line = reader.readLine();
 
@@ -46,28 +60,30 @@ public class SSParticlesFileReader {
           throw new IllegalArgumentException("Missing particles");
         }
 
-        final String[] coordinateStrings = line.trim().split("\\s+", 3);
-        if (coordinateStrings.length != 3) {
+        final String[] coordinateStrings = line.trim().split("\\s+", 4);
+        if (coordinateStrings.length != 4) {
           throw new IllegalArgumentException("Invalid particle's properties");
         }
 
+        final int id;
         final double r;
         final double x;
         final double y;
         try {
-          r = Double.valueOf(coordinateStrings[0]);
-          x = Double.valueOf(coordinateStrings[1]);
-          y = Double.valueOf(coordinateStrings[2]);
+          id = Integer.valueOf(coordinateStrings[0]);
+          r = Double.valueOf(coordinateStrings[1]);
+          x = Double.valueOf(coordinateStrings[2]);
+          y = Double.valueOf(coordinateStrings[3]);
         } catch (final NumberFormatException exception) {
+          exception.printStackTrace();
           throw new IllegalArgumentException("Invalid particle's properties");
         }
 
-        ret.put(new Particle(i, r), new Point2D(x, y));
+        particles.add(
+            ImmutableParticle.builder().id(id).radius(r).position(new Point2D(x, y)).build());
       }
-    } catch (final IOException exception) {
-      throw exception;
     }
 
-    return ret;
+    return particles;
   }
 }

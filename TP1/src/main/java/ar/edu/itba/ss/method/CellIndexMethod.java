@@ -27,14 +27,10 @@ public class CellIndexMethod implements NeighbourFindingMethod {
     this.periodic = periodic;
   }
 
-  /**
-   * @param particlesPositions positions of the particles, x as col and y as row
-   */
   @Override
-  public Map<Particle, Set<Neighbour>> apply(final Map<Particle, Point2D> particlesPositions,
-      final double rc) {
+  public Map<Particle, Set<Neighbour>> apply(final List<Particle> particles, final double rc) {
 
-    this.m = (int) (l / (rc + 2 * particlesPositions.keySet().stream().parallel().max(Comparator.comparingDouble(Particle::getRadius)).get().getRadius()));
+    this.m = (int) (l / (rc + 2 * particles.stream().parallel().max(Comparator.comparingDouble(Particle::radius)).get().radius()));
     this.cellLength = l / m;
 
     if (rc >= cellLength) {
@@ -43,15 +39,15 @@ public class CellIndexMethod implements NeighbourFindingMethod {
     }
 
     final Map<Particle, Set<Neighbour>> neighboursParticles = new HashMap<>();
-    for (final Particle particle : particlesPositions.keySet()) {
+    for (final Particle particle : particles){
       neighboursParticles.put(particle, new HashSet<>());
     }
 
-    final List<Particle>[][] matrix = createMatrix(particlesPositions);
+    final List<Particle>[][] matrix = createMatrix(particles);
     for (int row = 0; row < m; row++) {
       for (int col = 0; col < m; col++) {
         if (matrix[row][col] != null) {
-          addNeighbours(neighboursParticles, matrix, row, col, particlesPositions, rc);
+          addNeighbours(neighboursParticles, matrix, row, col, particles, rc);
         }
       }
     }
@@ -59,11 +55,11 @@ public class CellIndexMethod implements NeighbourFindingMethod {
     return neighboursParticles;
   }
 
-  private List<Particle>[][] createMatrix(final Map<Particle, Point2D> particlesPositions) {
+  private List<Particle>[][] createMatrix(final List<Particle> particles) {
     final List<Particle>[][] matrix = new List[m][m];
 
-    for (final Particle particle : particlesPositions.keySet()) {
-      final Point2D position = particlesPositions.get(particle);
+    for (final Particle particle : particles) {
+      final Point2D position = particle.position();
       final int row = (int) (position.getY() / cellLength);
       final int col = (int) (position.getX() / cellLength);
 
@@ -78,8 +74,8 @@ public class CellIndexMethod implements NeighbourFindingMethod {
   }
 
   private void addNeighbours(final Map<Particle, Set<Neighbour>> neighbours,
-      final List<Particle>[][] matrix, final int currentRow, final int currentCol,
-      final Map<Particle, Point2D> particlesPositions, final double rc) {
+                             final List<Particle>[][] matrix, final int currentRow, final int currentCol,
+                             final List<Particle> particles, final double rc) {
 
     final List<Particle> currentCell = matrix[currentRow][currentCol];
 
@@ -96,25 +92,24 @@ public class CellIndexMethod implements NeighbourFindingMethod {
 
         if (neighbourCell != null) {
           addNeighboursFromCell(neighbours, currentCell, neighbourCell, neighbourRow, neighbourCol,
-              particlesPositions, rc);
+              particles, rc);
         }
       }
     }
   }
 
   private void addNeighboursFromCell(final Map<Particle, Set<Neighbour>> neighbours,
-      final List<Particle> currentCell, final List<Particle> neighbourCell, final int neighbourRow,
-      final int neighbourCol, final Map<Particle, Point2D> particlesPositions, final double rc) {
+                                     final List<Particle> currentCell, final List<Particle> neighbourCell, final int neighbourRow,
+                                     final int neighbourCol, final List<Particle> particles, final double rc) {
 
     for (final Particle particle1 : currentCell) {
       for (final Particle particle2 : neighbourCell) {
         if (!particle1.equals(particle2)) {
-          final Point2D point1 = particlesPositions.get(particle1);
+          final Point2D point1 = particle1.position();
           // Remember: col is x and row is y
-          final Point2D point2 = particlesPositions.get(particle2)
+          final Point2D point2 = particle2.position()
               .add(coordinateCorrection(neighbourCol), coordinateCorrection(neighbourRow));
-          final double distance = NeighbourFindingMethod
-              .distance(particle1, point1, particle2, point2);
+          final double distance = point1.distance(point2) - particle1.radius() - particle2.radius();
 
           if (distance <= rc) {
             neighbours.get(particle1).add(new Neighbour(particle2, distance));
