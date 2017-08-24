@@ -58,11 +58,13 @@ public class OffLatticeAutomaton implements Runnable {
     }
 
     while (remainingTime >= 0) {
-      final Map<Particle, Set<Neighbour>> neighbours = neighbourFinder.apply(currentParticles, 0, rc);
+      final Map<Particle, Set<Neighbour>> neighbours = neighbourFinder
+          .apply(currentParticles, 0, rc);
       final List<Particle> newParticles = new LinkedList<>();
 
-      for (Particle particle : currentParticles) {
-        final ImmutableParticle.Builder particleBuilder = ImmutableParticle.builder().from(particle);
+      for (final Particle particle : currentParticles) {
+        final ImmutableParticle.Builder particleBuilder = ImmutableParticle.builder()
+            .from(particle);
         particleBuilder.position(calculateNewPosition(particle));
         particleBuilder.velocity(calculateNewVelocity(particle, neighbours.get(particle)));
         newParticles.add(particleBuilder.build());
@@ -107,8 +109,10 @@ public class OffLatticeAutomaton implements Runnable {
   }
 
   private Point2D calculateNewVelocity(final Particle particle, final Set<Neighbour> neighbours) {
-    final double xSum = particle.velocity().getX() + neighbours.stream().mapToDouble(n -> n.getNeighbourParticle().velocity().getX()).sum();
-    final double ySum = particle.velocity().getY() + neighbours.stream().mapToDouble(n -> n.getNeighbourParticle().velocity().getY()).sum();
+    final double xSum = particle.velocity().getX() + neighbours.stream()
+        .mapToDouble(n -> n.getNeighbourParticle().velocity().getX()).sum();
+    final double ySum = particle.velocity().getY() + neighbours.stream()
+        .mapToDouble(n -> n.getNeighbourParticle().velocity().getY()).sum();
 
     final double angleWithNoise = Math.atan2(ySum, xSum)
         + etha == 0 ? 0 : ThreadLocalRandom.current().nextDouble(-etha / 2, etha / 2);

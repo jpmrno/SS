@@ -97,7 +97,8 @@ public class CellIndexMethod implements NeighbourFindingMethod {
   }
 
   private void addNeighbours(final Map<Particle, Set<Neighbour>> neighbours,
-      final List<Particle>[][] matrix, final int currentRow, final int currentCol, final double rc) {
+      final List<Particle>[][] matrix, final int currentRow, final int currentCol,
+      final double rc) {
 
     final List<Particle> currentCell = matrix[currentRow][currentCol];
 

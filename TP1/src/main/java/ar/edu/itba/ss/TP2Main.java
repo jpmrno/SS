@@ -8,6 +8,7 @@ import java.util.List;
 import javafx.geometry.Point2D;
 
 public class TP2Main {
+
   public static void main(final String[] args) {
     final Particle minParticle = ImmutableParticle.builder()
         .id(1)
@@ -16,10 +17,11 @@ public class TP2Main {
         .build();
     final Particle maxParticle = ImmutableParticle.builder()
         .id(10)
-        .position(new Point2D(10,10))
+        .position(new Point2D(10, 10))
         .velocity(new Point2D(4, 4))
         .build();
-    final List<Particle> particles = RandomParticleGenerator.generateParticles(minParticle, maxParticle);
+    final List<Particle> particles = RandomParticleGenerator
+        .generateParticles(minParticle, maxParticle);
     final OffLatticeAutomaton automaton =
         new OffLatticeAutomaton(particles, 0.1, 1, 100, 0.1, 100);
 
