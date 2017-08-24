@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javafx.geometry.Point2D;
 
-public class ParticlesFiles {
+public class ParticlesXYZFiles {
 
   public static void append(final Path path, final double time, final List<Particle> particles)
       throws IOException {
