@@ -6,6 +6,7 @@ import ar.edu.itba.ss.method.CellIndexMethod;
 import ar.edu.itba.ss.model.ImmutableParticle;
 import ar.edu.itba.ss.model.Neighbour;
 import ar.edu.itba.ss.model.Particle;
+import ar.edu.itba.ss.model.Points;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,11 +25,11 @@ public class OffLatticeAutomaton implements Runnable {
   private final double totalTime;
   private final double eta;
   private final double l;
-
+  private final String saveFileName;
   private final CellIndexMethod neighbourFinder;
 
   public OffLatticeAutomaton(final List<Particle> initialParticles, final double l, final double rc,
-      final double dt, final double totalTime, final double eta) {
+      final double dt, final double totalTime, final double eta, final String saveFileName) {
 //  TODO: validate parameters
     this.initialParticles = initialParticles;
     this.rc = rc;
@@ -37,11 +38,12 @@ public class OffLatticeAutomaton implements Runnable {
     this.eta = eta;
     this.l = l;
     this.neighbourFinder = new CellIndexMethod(l, true);
+    this.saveFileName = saveFileName;
   }
 
   @Override
   public void run() {
-    final Path saveFile = IterativeFiles.firstNotExists("simulation"); // TODO: File name parameter
+    final Path saveFile = IterativeFiles.firstNotExists(saveFileName);
     List<Particle> currentParticles = initialParticles;
     double remainingTime = totalTime;
 
@@ -118,13 +120,6 @@ public class OffLatticeAutomaton implements Runnable {
     final double noise =
         eta == 0 ? 0 : ThreadLocalRandom.current().nextDouble(-eta / 2, eta / 2);
 
-    return polarToCartesian(particle.velocity().magnitude(), newAngle + noise);
-  }
-
-  private static Point2D polarToCartesian(final double magnitude, final double angle) {
-    final double x = magnitude * Math.cos(angle);
-    final double y = magnitude * Math.sin(angle);
-
-    return new Point2D(x, y);
+    return Points.polarToPoint2D(particle.velocity().magnitude(), newAngle + noise);
   }
 }

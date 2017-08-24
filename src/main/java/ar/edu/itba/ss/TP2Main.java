@@ -23,7 +23,7 @@ public class TP2Main {
     final List<Particle> particles = RandomParticleGenerator
         .generateParticles(minParticle, maxParticle);
     final OffLatticeAutomaton automaton =
-        new OffLatticeAutomaton(particles, 100, 10, 1, 1000, 0.1);
+        new OffLatticeAutomaton(particles, 100, 10, 1, 1000, 0.1, "simulation");
 
     automaton.run();
   }

@@ -15,7 +15,7 @@ hs_err_pid*
 *.m~
 
 ## Simulations
-simulation_*
+/simulation_*
 
 ## MAVEN
 target/

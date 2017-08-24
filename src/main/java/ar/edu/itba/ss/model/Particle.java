@@ -21,4 +21,8 @@ public interface Particle {
   default Point2D velocity() {
     return Point2D.ZERO;
   }
+
+  default boolean collides(final Particle other) {
+    return this.position().distance(other.position()) < this.radius() + other.radius();
+  }
 }

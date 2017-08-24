@@ -62,12 +62,6 @@ public abstract class RandomParticleGenerator {
   }
 
   private static boolean validParticle(final Particle particle, final List<Particle> particleList) {
-    return particleList.parallelStream().noneMatch(p -> collide(particle, p));
-  }
-
-  // TODO: move to Particle
-  private static boolean collide(final Particle particle1, final Particle particle2) {
-    return particle1.position().distance(particle2.position()) < particle1.radius() + particle2
-        .radius();
+    return particleList.parallelStream().noneMatch(particle::collides);
   }
 }
