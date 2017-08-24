@@ -1,4 +1,4 @@
-package ar.edu.itba.ss.automata;
+package ar.edu.itba.ss.automaton;
 
 import ar.edu.itba.ss.io.IterativeFiles;
 import ar.edu.itba.ss.io.ParticlesFiles;
@@ -22,19 +22,19 @@ public class OffLatticeAutomaton implements Runnable {
   private final double rc;
   private final double dt;
   private final double totalTime;
-  private final double etha;
+  private final double eta;
   private final double l;
 
   private final CellIndexMethod neighbourFinder;
 
-  public OffLatticeAutomaton(List<Particle> initialParticles, double rc, double dt,
-      double totalTime, double etha, double l) {
+  public OffLatticeAutomaton(final List<Particle> initialParticles, final double l, final double rc,
+      final double dt, final double totalTime, final double eta) {
 //  TODO: validate parameters
     this.initialParticles = initialParticles;
     this.rc = rc;
     this.dt = dt;
     this.totalTime = totalTime;
-    this.etha = etha;
+    this.eta = eta;
     this.l = l;
     this.neighbourFinder = new CellIndexMethod(l, true);
   }
@@ -47,7 +47,7 @@ public class OffLatticeAutomaton implements Runnable {
 
     try {
       Files.createFile(saveFile);
-    } catch (IOException e) {
+    } catch (IOException exception) {
       System.err.println("Can't create save file");
     }
 
@@ -57,7 +57,7 @@ public class OffLatticeAutomaton implements Runnable {
       System.err.println("Can't save state at " + (totalTime - remainingTime));
     }
 
-    while (remainingTime >= 0) {
+    while (remainingTime > 0) {
       final Map<Particle, Set<Neighbour>> neighbours = neighbourFinder
           .apply(currentParticles, 0, rc);
       final List<Particle> newParticles = new LinkedList<>();
@@ -114,10 +114,11 @@ public class OffLatticeAutomaton implements Runnable {
     final double ySum = particle.velocity().getY() + neighbours.stream()
         .mapToDouble(n -> n.getNeighbourParticle().velocity().getY()).sum();
 
-    final double angleWithNoise = Math.atan2(ySum, xSum)
-        + etha == 0 ? 0 : ThreadLocalRandom.current().nextDouble(-etha / 2, etha / 2);
+    final double newAngle = Math.atan2(ySum, xSum);
+    final double noise =
+        eta == 0 ? 0 : ThreadLocalRandom.current().nextDouble(-eta / 2, eta / 2);
 
-    return polarToCartesian(particle.velocity().magnitude(), angleWithNoise);
+    return polarToCartesian(particle.velocity().magnitude(), newAngle + noise);
   }
 
   private static Point2D polarToCartesian(final double magnitude, final double angle) {
