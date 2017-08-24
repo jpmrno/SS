@@ -7,15 +7,17 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.geometry.Point2D;
 
 public class ParticlesFiles {
 
-  public static void write(final Path path, final double time, final List<Particle> particles)
+  public static void append(final Path path, final double time, final List<Particle> particles)
       throws IOException {
-    try (final BufferedWriter writer = Files.newBufferedWriter(path)) {
+
+    try (final BufferedWriter writer = Files.newBufferedWriter(path, StandardOpenOption.APPEND)) {
       writer.write(particles.size() + "\n");
       writer.write(time + "\n");
       for (final Particle particle : particles) {
@@ -36,29 +38,29 @@ public class ParticlesFiles {
         throw new IllegalArgumentException("Missing size");
       }
 
-      final int size;
+      final int initialParticlesSize;
       try {
-        size = Integer.parseInt(line.trim());
+        initialParticlesSize = Integer.parseInt(line.trim());
       } catch (final NumberFormatException exception) {
-        throw new IllegalArgumentException("Invalid size");
+        throw new IllegalArgumentException("Invalid initial size");
       }
 
-      if ((line = reader.readLine()) == null) {
-        throw new IllegalArgumentException("Missing time");
+      line = reader.readLine();
+      if (line == null) {
+        throw new IllegalArgumentException("Missing initial time");
       }
 
-      final double time;
+      final double initialTime;
       try {
-        time = Double.parseDouble(line.trim());
+        initialTime = Double.parseDouble(line.trim());
       } catch (final NumberFormatException exception) {
-        throw new IllegalArgumentException("Invalid time");
+        throw new IllegalArgumentException("Invalid initial time");
       }
 
-      particles = new ArrayList<>(size);
+      particles = new ArrayList<>(initialParticlesSize);
 
-      for (int i = 0; i < size; i++) {
+      for (int i = 0; i < initialParticlesSize; i++) {
         line = reader.readLine();
-
         if (line == null) {
           throw new IllegalArgumentException("Missing particles");
         }

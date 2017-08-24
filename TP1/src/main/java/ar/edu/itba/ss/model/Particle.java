@@ -8,7 +8,10 @@ public interface Particle {
 
   int id();
 
-  double radius();
+  @Value.Default
+  default double radius() {
+    return 0;
+  }
 
   @Value.Auxiliary
   Point2D position();

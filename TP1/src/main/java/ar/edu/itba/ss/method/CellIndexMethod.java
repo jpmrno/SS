@@ -44,7 +44,7 @@ public class CellIndexMethod implements NeighbourFindingMethod {
     this.m = (int) Math.ceil(l / (rc + 2 * maxRadius));
     this.cellLength = l / m;
 
-    if (rc >= cellLength) {
+    if (rc > cellLength) {
       throw new IllegalArgumentException(
           "Cutoff distance has to be less than cell length (" + cellLength + ").");
     }
