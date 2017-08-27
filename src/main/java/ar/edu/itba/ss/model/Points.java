@@ -1,5 +1,6 @@
 package ar.edu.itba.ss.model;
 
+import java.util.List;
 import javafx.geometry.Point2D;
 
 public abstract class Points {
@@ -23,5 +24,10 @@ public abstract class Points {
     final double xy = Math.sqrt(magnitude * magnitude / 2);
 
     return new Point2D(xy, xy);
+  }
+
+  public static double normalAverageVeloxity(final List<Point2D> velocities) {
+    return velocities.stream().map(Point2D::normalize).reduce(Point2D::add).get()
+        .multiply((double) 1 / velocities.size()).magnitude();
   }
 }

@@ -12,10 +12,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadLocalRandom;
 import javafx.geometry.Point2D;
 
-public class OffLatticeAutomaton implements Runnable {
+public class OffLatticeAutomaton implements Callable<List<Particle>> {
 
   private final List<Particle> initialParticles;
   private final double rc;
@@ -40,7 +41,7 @@ public class OffLatticeAutomaton implements Runnable {
   }
 
   @Override
-  public void run() {
+  public List<Particle> call() {
     List<Particle> currentParticles = initialParticles;
     double remainingTime = totalTime;
 
@@ -60,6 +61,8 @@ public class OffLatticeAutomaton implements Runnable {
         System.err.println("Can't save state at " + (totalTime - remainingTime));
       }
     }
+
+    return currentParticles;
   }
 
   private List<Particle> nextParticles(final List<Particle> currentParticles) {
