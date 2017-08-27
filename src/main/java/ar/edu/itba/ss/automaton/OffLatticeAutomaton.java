@@ -21,19 +21,19 @@ public class OffLatticeAutomaton implements Callable<List<Particle>> {
   private final List<Particle> initialParticles;
   private final double rc;
   private final double dt;
-  private final double totalTime;
+  private final double times;
   private final double eta;
   private final double l;
   private final ParticlesWriter writer;
   private final CellIndexMethod neighbourFinder;
 
   public OffLatticeAutomaton(final List<Particle> initialParticles, final double l, final double rc,
-      final double dt, final double totalTime, final double eta, final ParticlesWriter writer) {
+      final double dt, final long times, final double eta, final ParticlesWriter writer) {
     // TODO: validate parameters
     this.initialParticles = Objects.requireNonNull(initialParticles);
     this.rc = rc;
     this.dt = dt;
-    this.totalTime = totalTime;
+    this.times = times;
     this.eta = eta;
     this.l = l;
     this.neighbourFinder = new CellIndexMethod(l, true);
@@ -43,22 +43,20 @@ public class OffLatticeAutomaton implements Callable<List<Particle>> {
   @Override
   public List<Particle> call() {
     List<Particle> currentParticles = initialParticles;
-    double remainingTime = totalTime;
 
     try {
-      writer.write(totalTime - remainingTime, currentParticles);
+      writer.write(0, currentParticles);
     } catch (final IOException exception) {
-      System.err.println("Can't save state at " + (totalTime - remainingTime));
+      System.err.println("Can't save state at 0");
     }
 
-    while (remainingTime > 0) {
+    for (int i = 1; i <= times; i++) {
       currentParticles = nextParticles(currentParticles);
-      remainingTime -= dt;
 
       try {
-        writer.write(totalTime - remainingTime, currentParticles);
+        writer.write(i * dt, currentParticles);
       } catch (final IOException exception) {
-        System.err.println("Can't save state at " + (totalTime - remainingTime));
+        System.err.println("Can't save state at " + (i * dt));
       }
     }
 
