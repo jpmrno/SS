@@ -41,7 +41,7 @@ public class CellIndexMethod implements NeighbourFindingMethod {
       throw new IllegalArgumentException("Invalid max radius");
     }
 
-    this.m = (int) Math.ceil(l / (rc + 2 * maxRadius));
+    this.m = (int) Math.floor(l / (rc + 2 * maxRadius));
     this.cellLength = l / m;
 
     if (rc > cellLength) {
