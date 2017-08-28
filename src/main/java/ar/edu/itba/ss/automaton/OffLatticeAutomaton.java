@@ -63,7 +63,7 @@ public class OffLatticeAutomaton implements Callable<List<Particle>> {
     return currentParticles;
   }
 
-  private List<Particle> nextParticles(final List<Particle> currentParticles) {
+  public List<Particle> nextParticles(final List<Particle> currentParticles) {
     final Map<Particle, Set<Neighbour>> neighbours = neighbourFinder.apply(currentParticles, 0, rc);
     final List<Particle> nextParticles = new LinkedList<>();
 

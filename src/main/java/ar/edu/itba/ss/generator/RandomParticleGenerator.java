@@ -43,7 +43,9 @@ public abstract class RandomParticleGenerator {
       }
 
       double vx = ThreadLocalRandom.current().nextDouble(desiredMagnitude);
+      vx *= ThreadLocalRandom.current().nextBoolean() ? -1 : 1;
       double vy = Math.sqrt(desiredMagnitude * desiredMagnitude - vx * vx);
+      vy *= ThreadLocalRandom.current().nextBoolean() ? -1 : 1;
 
       final Particle particle = ImmutableParticle.builder()
           .id(id)
