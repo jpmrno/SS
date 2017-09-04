@@ -18,6 +18,12 @@ public interface Particle {
 
   @Value.Auxiliary
   @Value.Default
+  default double mass() {
+    return 1;
+  }
+
+  @Value.Auxiliary
+  @Value.Default
   default Point2D velocity() {
     return Point2D.ZERO;
   }
