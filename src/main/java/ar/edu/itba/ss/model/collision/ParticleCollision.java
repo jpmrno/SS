@@ -1,11 +1,13 @@
-package ar.edu.itba.ss.model;
+package ar.edu.itba.ss.model.collision;
 
+import ar.edu.itba.ss.model.ImmutableParticle;
+import ar.edu.itba.ss.model.Particle;
 import javafx.geometry.Point2D;
 
 import java.util.LinkedList;
 import java.util.List;
 
-public class ParticleCollision implements Collision{
+public class ParticleCollision implements Collision {
 
     private final double time;
     private final Particle particle1;
@@ -45,6 +47,14 @@ public class ParticleCollision implements Collision{
                 .build());
 
         return ret;
+    }
+
+    @Override
+    public List<Particle> getParticles() {
+        List<Particle> particles = new LinkedList<>();
+        particles.add(particle1);
+        particles.add(particle2);
+        return particles;
     }
 
     @Override
