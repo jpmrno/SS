@@ -76,6 +76,7 @@ public class ParticleCollision implements Collision {
         ParticleCollision that = (ParticleCollision) o;
 
         if (Double.compare(that.time, time) != 0) return false;
+        if(particle1 == null || particle2 == null) return false;
         return (particle1.id() == that.particle1.id() && particle2.id() == that.particle2.id()) ||
                 (particle1.id() == that.particle2.id() && particle2.id() == that.particle1.id());
     }

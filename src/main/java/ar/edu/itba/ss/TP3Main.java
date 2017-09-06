@@ -3,6 +3,7 @@ package ar.edu.itba.ss;
 import ar.edu.itba.ss.generator.RandomParticleGenerator;
 import ar.edu.itba.ss.model.ImmutableParticle;
 import ar.edu.itba.ss.model.Particle;
+import ar.edu.itba.ss.model.Points;
 import ar.edu.itba.ss.simulator.GasDiffusionSimulator;
 import javafx.geometry.Point2D;
 
@@ -18,7 +19,7 @@ public class TP3Main {
         Particle maxParticle = ImmutableParticle.builder()
                 .id(200)
                 .position(new Point2D(0.24,0.09))
-                .velocity(new Point2D(0.01,0.01))
+                .velocity(Points.magnitudeToPoint2D(0.01))
                 .radius(0.0015)
                 .build();
         GasDiffusionSimulator simulator = new GasDiffusionSimulator(RandomParticleGenerator.generateParticles(minParticle,maxParticle),

@@ -1,5 +1,6 @@
 package ar.edu.itba.ss.simulator;
 
+import ar.edu.itba.ss.io.AppendFileParticlesWriter;
 import ar.edu.itba.ss.method.CellIndexMethod;
 import ar.edu.itba.ss.model.Direction;
 import ar.edu.itba.ss.model.ImmutableParticle;
@@ -10,6 +11,7 @@ import ar.edu.itba.ss.model.collision.ParticleCollision;
 import ar.edu.itba.ss.model.collision.WallCollision;
 import javafx.geometry.Point2D;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -27,9 +29,15 @@ public class GasDiffusionSimulator {
     }
 
     public void simulate(){
+        AppendFileParticlesWriter writer = new AppendFileParticlesWriter("./prueba");
         List<Particle> currentParticles = initialParticles;
 
-        while (true){
+        for (int i = 0; i < 500; i++) {
+            try {
+                writer.write(i,currentParticles);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             Collision collision = nextCollision(currentParticles);
             currentParticles = nextParticles(currentParticles,collision);
         }
@@ -42,13 +50,14 @@ public class GasDiffusionSimulator {
             collisions.add(nextCollisionOfSpecificParticle(p, particles));
         });
 
-        return collisions.parallelStream().min(Comparator.comparingDouble(Collision::getTime)).get();
+        return collisions.stream().min(Comparator.comparingDouble(Collision::getTime)).get();
     }
 
     private Collision nextCollisionOfSpecificParticle(Particle particle, List<Particle> neighbours){
-        Set<Collision> collisions = neighbours.parallelStream()
-                .map(n -> collisionBetweenParticles(particle, n))
-                .collect(Collectors.toSet());
+       // Set<Collision> collisions = neighbours.stream()
+         //       .map(n -> collisionBetweenParticles(particle, n))
+           //     .collect(Collectors.toSet());
+        Set<Collision> collisions = new HashSet<>();
         collisions.add(collisionWithHorizontalWall(particle));
         collisions.add(collisionWithVerticalWall(particle));
 
@@ -57,17 +66,21 @@ public class GasDiffusionSimulator {
 
     private Collision collisionBetweenParticles(final Particle particle1, final Particle particle2){
         if(particle1.id() == particle2.id()){
-            new ParticleCollision(-1,null,null);
+            //FIXME
+            return new ParticleCollision(999999,null,null);
         }
         Point2D deltaV = particle2.velocity().subtract(particle1.velocity());
         Point2D deltaR = particle2.position().subtract(particle1.position());
         double sigma = particle1.radius() + particle2.radius();
-        double d = Math.pow(deltaV.dotProduct(deltaR),2) - (deltaV.dotProduct(deltaV))*(deltaR.dotProduct(deltaR) - sigma*sigma);
+        double d = (deltaV.dotProduct(deltaR)*deltaV.dotProduct(deltaR))
+                - (deltaV.dotProduct(deltaV))*(deltaR.dotProduct(deltaR) - sigma*sigma);
 
-        if(deltaV.dotProduct(deltaR) >= 0 || d < 0)
-            new ParticleCollision(-1,null,null);
+        if(deltaV.dotProduct(deltaR) >= 0 || d < 0){
+            //FIXME
+            return new ParticleCollision(999999,null,null);
+        }
 
-        double time = -(deltaV.dotProduct(deltaR) + Math.sqrt(d))/(deltaV.dotProduct(deltaV));
+        double time = (deltaV.dotProduct(deltaR) + Math.sqrt(d))/(deltaV.dotProduct(deltaV));
         return new ParticleCollision(time, particle1, particle2);
     }
 
@@ -104,7 +117,7 @@ public class GasDiffusionSimulator {
         List<Integer> collidedIds = collision.getParticles().stream().map(Particle::id).collect(Collectors.toList());
 
         nextParticles.addAll(collision.collide());
-        oldParticles.parallelStream().forEach(p->{
+        oldParticles.forEach(p->{
             if(!collidedIds.contains(p.id())){
                 nextParticles.add(ImmutableParticle.builder()
                         .from(p)
