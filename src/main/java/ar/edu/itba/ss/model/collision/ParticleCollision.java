@@ -23,7 +23,8 @@ public class ParticleCollision implements Collision {
     public List<Particle> collide() {
         double sigma = particle1.radius() + particle2.radius();
         Point2D deltaV = particle2.velocity().subtract(particle1.velocity());
-        Point2D deltaR = particle2.position().subtract(particle1.position());
+        Point2D deltaR = new Point2D(particle2.position().getX()*particle2.radius() - particle1.position().getX()*particle1.radius(),
+            particle2.position().getY()*particle2.radius() - particle1.position().getY()*particle1.radius());
         double j = (2 * particle1.mass() * particle2.mass() * (deltaV.dotProduct(deltaR)))
                 / (sigma * (particle1.mass() + particle2.mass()));
         double jx = (j * (particle2.position().getX() - particle1.position().getX()))/sigma;

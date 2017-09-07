@@ -54,10 +54,9 @@ public class GasDiffusionSimulator {
     }
 
     private Collision nextCollisionOfSpecificParticle(Particle particle, List<Particle> neighbours){
-       // Set<Collision> collisions = neighbours.stream()
-         //       .map(n -> collisionBetweenParticles(particle, n))
-           //     .collect(Collectors.toSet());
-        Set<Collision> collisions = new HashSet<>();
+        Set<Collision> collisions = neighbours.stream()
+                .map(n -> collisionBetweenParticles(particle, n))
+                .collect(Collectors.toSet());
         collisions.add(collisionWithHorizontalWall(particle));
         collisions.add(collisionWithVerticalWall(particle));
 
@@ -70,7 +69,8 @@ public class GasDiffusionSimulator {
             return new ParticleCollision(999999,null,null);
         }
         Point2D deltaV = particle2.velocity().subtract(particle1.velocity());
-        Point2D deltaR = particle2.position().subtract(particle1.position());
+        Point2D deltaR = new Point2D(particle2.position().getX()*particle2.radius() - particle1.position().getX()*particle1.radius(),
+            particle2.position().getY()*particle2.radius() - particle1.position().getY()*particle1.radius());
         double sigma = particle1.radius() + particle2.radius();
         double d = (deltaV.dotProduct(deltaR)*deltaV.dotProduct(deltaR))
                 - (deltaV.dotProduct(deltaV))*(deltaR.dotProduct(deltaR) - sigma*sigma);
