@@ -22,25 +22,27 @@ public class GasDiffusionSimulator2 implements Callable<Set<Particle>> {
   private final double boxHeight;
   private final double middleGap;
   private final long collisions;
+  private final double dt;
   private final ParticlesWriter writer;
 
   private final Point2D[][] wallsVertical;
   private final Point2D[][] wallsHorizontal;
 
   public GasDiffusionSimulator2(final List<Particle> initialParticles, final double boxWidth,
-      final double boxHeight, final double middleGap, final long collisions,
-      final ParticlesWriter writer) {
+                                final double boxHeight, final double middleGap, final long collisions,
+                                double dt, final ParticlesWriter writer) {
     this.initialParticles = new HashSet<>(initialParticles);
     this.boxWidth = boxWidth;
     this.boxHeight = boxHeight;
     this.middleGap = middleGap;
+    this.dt = dt;
     this.writer = writer;
     this.collisions = collisions;
     this.wallsVertical = new Point2D[][]{
         {Point2D.ZERO, new Point2D(0, boxHeight)},
-        {new Point2D(boxWidth / 2, 0), new Point2D(boxWidth / 2, boxHeight / 2 - middleGap / 2)},
-        {new Point2D(boxWidth / 2, boxHeight / 2 + middleGap / 2),
-            new Point2D(boxWidth / 2, boxHeight)},
+//        {new Point2D(boxWidth / 2, 0), new Point2D(boxWidth / 2, boxHeight / 2 - middleGap / 2)},
+//        {new Point2D(boxWidth / 2, boxHeight / 2 + middleGap / 2),
+//            new Point2D(boxWidth / 2, boxHeight)},
         {new Point2D(boxWidth, 0), new Point2D(boxWidth, boxHeight)}
     };
     this.wallsHorizontal = new Point2D[][]{
@@ -52,6 +54,7 @@ public class GasDiffusionSimulator2 implements Callable<Set<Particle>> {
   @Override
   public Set<Particle> call() {
     Set<Particle> currentParticles = initialParticles;
+    double time = 0;
 
     try {
       writer.write(0, currentParticles);
@@ -66,13 +69,36 @@ public class GasDiffusionSimulator2 implements Callable<Set<Particle>> {
         return currentParticles;
       }
 
+      double timeBeforeCollision = time;
+      Set<Particle> newParticles = currentParticles;
+      while (time < timeBeforeCollision + collision.get().getElapsedTime()){
+
+        newParticles = newParticles.stream()
+                .map(p -> ImmutableParticle.builder()
+                        .from(p)
+                        .position(Points.linearMotion(p.position(), p.velocity(), dt))
+                        .build())
+                .collect(Collectors.toSet());
+        try {
+          writer.write(time, newParticles);
+        } catch (final IOException exception) {
+          System.err.println("Can't save state after " + i + " time");
+        }
+
+        if(time + dt > timeBeforeCollision + collision.get().getElapsedTime()){
+          time = timeBeforeCollision + collision.get().getElapsedTime();
+        } else {
+          time += dt;
+        }
+      }
+
       currentParticles = nextParticles(currentParticles, collision.get());
 
-      try {
-        writer.write(i, currentParticles);
-      } catch (final IOException exception) {
-        System.err.println("Can't save state after " + i + " collisions");
-      }
+//      try {
+//        writer.write(i, currentParticles);
+//      } catch (final IOException exception) {
+//        System.err.println("Can't save state after " + i + " collisions");
+//      }
     }
 
     return currentParticles;
