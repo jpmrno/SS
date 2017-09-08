@@ -4,7 +4,9 @@ import ar.edu.itba.ss.model.Particle;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 public class AppendFileParticlesWriter implements ParticlesWriter {
 
@@ -23,5 +25,10 @@ public class AppendFileParticlesWriter implements ParticlesWriter {
   @Override
   public void write(final double time, final List<Particle> particles) throws IOException {
     ParticlesXYZFiles.append(filePath, time, particles);
+  }
+
+  @Override
+  public void write(double time, Set<Particle> particles) throws IOException {
+    ParticlesXYZFiles.append(filePath, time, new LinkedList<>(particles));
   }
 }
