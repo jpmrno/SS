@@ -27,6 +27,15 @@ public abstract class Points {
   }
 
   public static double normalAverage(final List<Point2D> points) {
-    return points.stream().map(Point2D::normalize).reduce(Point2D::add).get().magnitude() / (double) points.size();
+    return points.stream().map(Point2D::normalize).reduce(Point2D::add).get().magnitude()
+        / (double) points.size();
+  }
+
+  public static Point2D linearMotion(final Point2D position, final Point2D velocity,
+      final double dt) {
+    double x = position.getX() + velocity.getX() * dt;
+    double y = position.getY() + velocity.getY() * dt;
+
+    return new Point2D(x, y);
   }
 }
