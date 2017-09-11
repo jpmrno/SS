@@ -126,9 +126,16 @@ public class Collision implements Comparable<Collision> {
     final double deltaVxR = deltaV.dotProduct(deltaR);
     final double sigma = particle1.radius() + particle2.radius();
 
-    final double j =
-        (2 * particle1.mass() * particle2.mass() * deltaVxR) / (sigma * (particle1.mass()
-            + particle2.mass()));
+    double j;
+    if (particle1.mass() == Double.POSITIVE_INFINITY) {
+      j = 2 * particle2.mass() * deltaVxR / sigma;
+    } else if (particle2.mass() == Double.POSITIVE_INFINITY) {
+      j = 2 * particle1.mass() * deltaVxR / sigma;
+    } else {
+      j = 2 * particle1.mass() * particle2.mass() * deltaVxR / (sigma * (particle1.mass()
+          + particle2.mass()));
+    }
+
     final Point2D jVector = deltaR.multiply(j / sigma);
 
     final List<Particle> particlesAfterCollision = new LinkedList<>();

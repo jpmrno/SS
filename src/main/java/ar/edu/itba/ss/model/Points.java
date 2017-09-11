@@ -38,4 +38,17 @@ public abstract class Points {
 
     return new Point2D(x, y);
   }
+
+  public static int between(final List<Point2D> points, final Point2D start, final Point2D end) {
+    int ret = 0;
+
+    for (final Point2D point : points) {
+      if (point.getX() >= start.getX() && point.getY() >= start.getY() && point.getX() <= end.getX()
+          && point.getY() <= end.getY()) {
+        ret++;
+      }
+    }
+
+    return ret;
+  }
 }

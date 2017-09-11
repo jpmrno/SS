@@ -36,6 +36,11 @@ public abstract class RandomParticleGenerator {
         r = ThreadLocalRandom.current().nextDouble(minParticle.radius(), maxParticle.radius());
       }
 
+      double m = minParticle.mass();
+      if (m != maxParticle.mass()) {
+        r = ThreadLocalRandom.current().nextDouble(minParticle.mass(), maxParticle.mass());
+      }
+
       double desiredMagnitude = minParticle.velocity().magnitude();
       if (desiredMagnitude != maxParticle.velocity().magnitude()) {
         desiredMagnitude = ThreadLocalRandom.current()
@@ -51,6 +56,7 @@ public abstract class RandomParticleGenerator {
           .id(id)
           .position(new Point2D(x, y))
           .radius(r)
+          .mass(m)
           .velocity(new Point2D(vx, vy))
           .build();
 

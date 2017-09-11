@@ -5,6 +5,7 @@ import ar.edu.itba.ss.model.Collision;
 import ar.edu.itba.ss.model.ImmutableParticle;
 import ar.edu.itba.ss.model.Particle;
 import ar.edu.itba.ss.model.Points;
+import ar.edu.itba.ss.model.criteria.Criteria;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -18,17 +19,17 @@ import javafx.geometry.Point2D;
 public class GasDiffusionSimulator implements Callable<Set<Particle>> {
 
   private final Set<Particle> initialParticles;
-  private final long collisions;
+  private final Criteria criteria;
   private final double dt;
   private final ParticlesWriter writer;
   private final Point2D[][] wallsVertical;
   private final Point2D[][] wallsHorizontal;
 
   public GasDiffusionSimulator(final List<Particle> initialParticles, final double boxWidth,
-      final double boxHeight, final double middleGap, final long collisions, final double dt,
+      final double boxHeight, final double middleGap, final double dt, final Criteria criteria,
       final ParticlesWriter writer) {
     this.initialParticles = new HashSet<>(initialParticles);
-    this.collisions = collisions;
+    this.criteria = criteria;
     this.dt = dt;
     this.writer = writer;
     this.wallsVertical = new Point2D[][]{
@@ -55,35 +56,46 @@ public class GasDiffusionSimulator implements Callable<Set<Particle>> {
       System.err.println("Can't save state at 0");
     }
 
-    for (int i = 0; i < collisions; i++) {
-      final Optional<Collision> collision = nextCollision(currentParticles);
-      if (!collision.isPresent()) {
-        return currentParticles;
-      }
+    Optional<Collision> nextCollision = nextCollision(currentParticles);
+    if (!nextCollision.isPresent()) {
+      throw new IllegalStateException("No collision found");
+    }
+    double nextCollisionTime = time + nextCollision.get().getElapsedTime();
+    Set<Particle> particlesAfterCollision = currentParticles;
 
-      double timeLastCollision = time;
-      Set<Particle> newParticles = currentParticles;
-      while (time < timeLastCollision + collision.get().getElapsedTime()) {
-        newParticles = newParticles.stream()
+    while (!criteria.test(time, currentParticles)) {
+      time += dt;
+
+      if (nextCollisionTime <= time) {
+        time = nextCollisionTime;
+
+        try {
+          writer.write(time, currentParticles);
+        } catch (final IOException exception) {
+          System.err.println("Can't save state at " + time);
+        }
+
+        currentParticles = nextParticles(particlesAfterCollision, nextCollision.get());
+        particlesAfterCollision = currentParticles;
+        nextCollision = nextCollision(currentParticles);
+        if (!nextCollision.isPresent()) {
+          throw new IllegalStateException("No collision found");
+        }
+        nextCollisionTime = time + nextCollision.get().getElapsedTime();
+      } else {
+        currentParticles = currentParticles.stream()
             .map(p -> ImmutableParticle.builder()
                 .from(p)
                 .position(Points.linearMotion(p.position(), p.velocity(), dt))
                 .build())
             .collect(Collectors.toSet());
-        try {
-          writer.write(time, newParticles);
-        } catch (final IOException exception) {
-          System.err.println("Can't save state at " + i);
-        }
 
-        if (time + dt > timeLastCollision + collision.get().getElapsedTime()) {
-          time = timeLastCollision + collision.get().getElapsedTime();
-        } else {
-          time += dt;
+        try {
+          writer.write(time, currentParticles);
+        } catch (final IOException exception) {
+          System.err.println("Can't save state at " + time);
         }
       }
-
-      currentParticles = nextParticles(currentParticles, collision.get());
     }
 
     return currentParticles;
