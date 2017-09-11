@@ -1,7 +1,7 @@
 package ar.edu.itba.ss;
 
 import ar.edu.itba.ss.generator.RandomParticleGenerator;
-import ar.edu.itba.ss.io.AppendFileParticlesWriter;
+import ar.edu.itba.ss.io.writer.AppendFileParticlesWriter;
 import ar.edu.itba.ss.model.ImmutableParticle;
 import ar.edu.itba.ss.model.Particle;
 import ar.edu.itba.ss.model.Points;

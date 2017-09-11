@@ -1,6 +1,6 @@
 package ar.edu.itba.ss.simulator;
 
-import ar.edu.itba.ss.io.ParticlesWriter;
+import ar.edu.itba.ss.io.writer.ParticlesWriter;
 import ar.edu.itba.ss.model.Collision;
 import ar.edu.itba.ss.model.ImmutableParticle;
 import ar.edu.itba.ss.model.Particle;
@@ -12,26 +12,20 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import javafx.geometry.Point2D;
 
-public class GasDiffusionSimulator implements Callable<Set<Particle>> {
+public class GasDiffusionSimulator {
 
-  private final Set<Particle> initialParticles;
-  private final Criteria criteria;
+  private Set<Particle> initialParticles;
   private final double dt;
-  private final ParticlesWriter writer;
   private final Point2D[][] wallsVertical;
   private final Point2D[][] wallsHorizontal;
 
   public GasDiffusionSimulator(final List<Particle> initialParticles, final double boxWidth,
-      final double boxHeight, final double middleGap, final double dt, final Criteria criteria,
-      final ParticlesWriter writer) {
+      final double boxHeight, final double middleGap, final double dt) {
     this.initialParticles = new HashSet<>(initialParticles);
-    this.criteria = criteria;
     this.dt = dt;
-    this.writer = writer;
     this.wallsVertical = new Point2D[][]{
         {Point2D.ZERO, new Point2D(0, boxHeight)},
         {new Point2D(boxWidth / 2, 0), new Point2D(boxWidth / 2, boxHeight / 2 - middleGap / 2)},
@@ -45,8 +39,7 @@ public class GasDiffusionSimulator implements Callable<Set<Particle>> {
     };
   }
 
-  @Override
-  public Set<Particle> call() {
+  public Set<Particle> call(Criteria endCriteria, ParticlesWriter writer) {
     Set<Particle> currentParticles = initialParticles;
     double time = 0;
 
@@ -63,14 +56,14 @@ public class GasDiffusionSimulator implements Callable<Set<Particle>> {
     double nextCollisionTime = time + nextCollision.get().getElapsedTime();
     Set<Particle> particlesAfterCollision = currentParticles;
 
-    while (!criteria.test(time, currentParticles)) {
+    while (!endCriteria.test(time, currentParticles)) {
       time += dt;
 
       if (nextCollisionTime <= time) {
         time = nextCollisionTime;
 
         try {
-          writer.write(time, currentParticles);
+          writer.write(time, currentParticles, nextCollision.get());
         } catch (final IOException exception) {
           System.err.println("Can't save state at " + time);
         }
@@ -98,6 +91,7 @@ public class GasDiffusionSimulator implements Callable<Set<Particle>> {
       }
     }
 
+    initialParticles = currentParticles;
     return currentParticles;
   }
 

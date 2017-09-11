@@ -1,5 +1,8 @@
-package ar.edu.itba.ss.io;
+package ar.edu.itba.ss.io.writer;
 
+import ar.edu.itba.ss.io.IterativeFiles;
+import ar.edu.itba.ss.io.ParticlesXYZFiles;
+import ar.edu.itba.ss.model.Collision;
 import ar.edu.itba.ss.model.Particle;
 import java.io.IOException;
 import java.nio.file.Files;

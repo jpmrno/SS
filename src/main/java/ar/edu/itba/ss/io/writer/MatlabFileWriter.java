@@ -1,4 +1,4 @@
-package ar.edu.itba.ss.io;
+package ar.edu.itba.ss.io.writer;
 
 import ar.edu.itba.ss.model.Neighbour;
 import ar.edu.itba.ss.model.Particle;

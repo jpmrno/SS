@@ -1,6 +1,6 @@
 package ar.edu.itba.ss.automaton;
 
-import ar.edu.itba.ss.io.ParticlesWriter;
+import ar.edu.itba.ss.io.writer.ParticlesWriter;
 import ar.edu.itba.ss.method.CellIndexMethod;
 import ar.edu.itba.ss.model.ImmutableParticle;
 import ar.edu.itba.ss.model.Neighbour;
