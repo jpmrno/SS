@@ -9,11 +9,13 @@ public class Collision implements Comparable<Collision> {
 
   private List<Particle> particlesAfterCollision;
   private double elapsedTime;
+  private final double pressure;
 
   private Collision(final List<Particle> particlesAfterCollision,
-      final double elapsedTime) {
+                    final double elapsedTime, double pressure) {
     this.particlesAfterCollision = particlesAfterCollision;
     this.elapsedTime = elapsedTime;
+    this.pressure = pressure;
   }
 
   public List<Particle> getParticlesAfterCollision() {
@@ -78,7 +80,9 @@ public class Collision implements Comparable<Collision> {
         .velocity(newVelocity)
         .build());
 
-    return Optional.of(new Collision(particlesAfterCollision, elapsedTime));
+    double pressure = StateEquations.pressure(particle, start.distance(end));
+
+    return Optional.of(new Collision(particlesAfterCollision, elapsedTime, pressure));
   }
 
   public static Optional<Collision> withParticle(final Particle particle1,
@@ -90,7 +94,7 @@ public class Collision implements Comparable<Collision> {
     }
 
     return Optional
-        .of(new Collision(collide(particle1, particle2, elapsedTime), elapsedTime));
+        .of(new Collision(collide(particle1, particle2, elapsedTime), elapsedTime, 0));
   }
 
   private static double collisionTime(final Particle particle1, final Particle particle2) {
@@ -151,6 +155,10 @@ public class Collision implements Comparable<Collision> {
         .build());
 
     return particlesAfterCollision;
+  }
+
+  public double getPressure() {
+    return pressure;
   }
 
   @Override
