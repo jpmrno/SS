@@ -23,10 +23,8 @@ public class PressureWriter implements ParticlesWriter {
     }
 
     @Override
-    public void write(final double time, final List<Particle> particles, final Collision collision) throws IOException{
-//        Particle particle;
-//        if(collision.)
-//        pressure += StateEquations.pressure(collision.getParticlesAfterCollision())
+    public void write(final double time, final Set<Particle> particles, final Collision collision) throws IOException{
+        pressure += collision.getPressure();
     }
 
     public double getPressure() {
