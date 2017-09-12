@@ -17,10 +17,10 @@ import javafx.geometry.Point2D;
 
 public class GasDiffusionSimulator {
 
-  private Set<Particle> initialParticles;
   private final double dt;
   private final Point2D[][] wallsVertical;
   private final Point2D[][] wallsHorizontal;
+  private Set<Particle> initialParticles;
 
   public GasDiffusionSimulator(final List<Particle> initialParticles, final double boxWidth,
       final double boxHeight, final double middleGap, final double dt) {

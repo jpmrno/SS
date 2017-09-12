@@ -41,6 +41,16 @@ public class Scatter2DChart extends Application {
     new Thread(() -> Application.launch(Scatter2DChart.class, null)).start();
   }
 
+  public static void addSeries(final String name, final List<Point2D> points) {
+    final Series<Number, Number> series = new Series();
+
+    series.setName(Objects.requireNonNull(name));
+    for (final Point2D point : points) {
+      series.getData().add(new Data<>(point.getX(), point.getY()));
+    }
+    Scatter2DChart.chart.getData().add(series);
+  }
+
   @Override
   public void start(final Stage primaryStage) throws Exception {
     Scatter2DChart.chart = new ScatterChart<>(
@@ -51,15 +61,5 @@ public class Scatter2DChart extends Application {
     primaryStage.setTitle(chart.getTitle());
     primaryStage.setScene(new Scene(chart));
     primaryStage.show();
-  }
-
-  public static void addSeries(final String name, final List<Point2D> points) {
-    final Series<Number, Number> series = new Series();
-
-    series.setName(Objects.requireNonNull(name));
-    for (final Point2D point : points) {
-      series.getData().add(new Data<>(point.getX(), point.getY()));
-    }
-    Scatter2DChart.chart.getData().add(series);
   }
 }

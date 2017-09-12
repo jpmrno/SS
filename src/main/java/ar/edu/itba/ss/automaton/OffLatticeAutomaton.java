@@ -40,6 +40,18 @@ public class OffLatticeAutomaton implements Callable<List<Particle>> {
     this.writer = Objects.requireNonNull(writer);
   }
 
+  private static double coordinateCorrection(final double coordinate, final double limit) {
+    if (coordinate > limit) {
+      return -limit;
+    }
+
+    if (coordinate < 0) {
+      return limit;
+    }
+
+    return 0;
+  }
+
   @Override
   public List<Particle> call() {
     List<Particle> currentParticles = initialParticles;
@@ -106,17 +118,5 @@ public class OffLatticeAutomaton implements Callable<List<Particle>> {
         eta == 0 ? 0 : ThreadLocalRandom.current().nextDouble(-eta / 2, eta / 2);
 
     return Points.polarToPoint2D(particle.velocity().magnitude(), newAngle + noise);
-  }
-
-  private static double coordinateCorrection(final double coordinate, final double limit) {
-    if (coordinate > limit) {
-      return -limit;
-    }
-
-    if (coordinate < 0) {
-      return limit;
-    }
-
-    return 0;
   }
 }

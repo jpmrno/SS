@@ -7,23 +7,15 @@ import javafx.geometry.Point2D;
 
 public class Collision implements Comparable<Collision> {
 
+  private final double pressure;
   private List<Particle> particlesAfterCollision;
   private double elapsedTime;
-  private final double pressure;
 
   private Collision(final List<Particle> particlesAfterCollision,
-                    final double elapsedTime, double pressure) {
+      final double elapsedTime, double pressure) {
     this.particlesAfterCollision = particlesAfterCollision;
     this.elapsedTime = elapsedTime;
     this.pressure = pressure;
-  }
-
-  public List<Particle> getParticlesAfterCollision() {
-    return particlesAfterCollision;
-  }
-
-  public double getElapsedTime() {
-    return elapsedTime;
   }
 
   public static Optional<Collision> withWall(final Particle particle, final Point2D start,
@@ -155,6 +147,14 @@ public class Collision implements Comparable<Collision> {
         .build());
 
     return particlesAfterCollision;
+  }
+
+  public List<Particle> getParticlesAfterCollision() {
+    return particlesAfterCollision;
+  }
+
+  public double getElapsedTime() {
+    return elapsedTime;
   }
 
   public double getPressure() {
