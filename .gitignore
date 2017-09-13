@@ -9,6 +9,14 @@ hs_err_pid*
 ## LOGS
 *.log
 
+## MATLAB
+*.m
+*.asv
+*.m~
+
+## Simulations
+/simulation_*
+
 ## MAVEN
 target/
 pom.xml.tag
