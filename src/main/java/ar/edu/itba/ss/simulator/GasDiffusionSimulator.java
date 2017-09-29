@@ -15,7 +15,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javafx.geometry.Point2D;
 
-public class GasDiffusionSimulator {
+public class GasDiffusionSimulator implements Simulator{
 
   private final double dt;
   private final Point2D[][] wallsVertical;
@@ -39,7 +39,8 @@ public class GasDiffusionSimulator {
     };
   }
 
-  public Set<Particle> call(Criteria endCriteria, ParticlesWriter writer) {
+  @Override
+  public Set<Particle> simulate(Criteria endCriteria, ParticlesWriter writer) {
     Set<Particle> currentParticles = initialParticles;
     double time = 0;
 
