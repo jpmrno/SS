@@ -30,6 +30,7 @@ public class DampedHarmonicOscillator {
   }
 
   public void forwardTime(final long times) {
+
     for (int i = 0; i < times; i++) {
       particle = move(particle, k, b, dt);
     }

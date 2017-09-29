@@ -1,7 +1,7 @@
 package ar.edu.itba.ss.automaton;
 
 import ar.edu.itba.ss.io.writer.ParticlesWriter;
-import ar.edu.itba.ss.method.CellIndexMethod;
+import ar.edu.itba.ss.method.neigbour.CellIndexMethod;
 import ar.edu.itba.ss.model.ImmutableParticle;
 import ar.edu.itba.ss.model.Neighbour;
 import ar.edu.itba.ss.model.Particle;
