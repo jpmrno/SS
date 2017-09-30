@@ -1,7 +1,6 @@
 package ar.edu.itba.ss.simulator;
 
 import ar.edu.itba.ss.io.writer.ParticlesWriter;
-import ar.edu.itba.ss.method.LennardJonesForceFunction;
 import ar.edu.itba.ss.method.MovementFunction;
 import ar.edu.itba.ss.method.neigbour.CellIndexMethod;
 import ar.edu.itba.ss.model.ImmutableParticle;
@@ -12,35 +11,27 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import javafx.geometry.Point2D;
 
 public class LennardJonesGasSimulator implements Simulator {
-
-  public static final BiFunction<Particle, Set<Neighbour>, Point2D> FORCE_FUNCTION = new LennardJonesForceFunction();
 
   private final List<Particle> initialParticles;
   private final double dt;
   private final double boxWidth;
   private final double boxHeight;
   private final double middleGap;
-  private final double epsilon;
-  private final double rm;
   private final CellIndexMethod cim;
   private final double rc;
 
   public LennardJonesGasSimulator(final List<Particle> initialParticles, final double boxWidth,
-      final double boxHeight, final double middleGap, final double dt,
-      double epsilon, double rm, double rc,
+      final double boxHeight, final double middleGap, final double dt, double rc,
       final Map<Particle, MovementFunction> movementFunctions) {
     this.initialParticles = initialParticles;
     this.dt = dt;
-    this.middleGap = middleGap;
     this.boxWidth = boxWidth;
     this.boxHeight = boxHeight;
-    this.epsilon = epsilon;
-    this.rm = rm;
+    this.middleGap = middleGap;
     this.rc = rc;
     this.cim = new CellIndexMethod(boxHeight > boxWidth ? boxHeight : boxWidth, false);
   }
@@ -51,8 +42,8 @@ public class LennardJonesGasSimulator implements Simulator {
     List<Particle> particles = initialParticles;
 
     while (!endCriteria.test(time, particles)) {
-      Map<Particle, Set<Neighbour>> neighbours = cim.apply(particles,
-          particles.get(0).radius(), rc);
+      Map<Particle, Set<Neighbour>> neighbours = cim
+          .apply(particles, particles.get(0).radius(), rc);
       particles = nextParticles(neighbours);
     }
     return null;
@@ -144,7 +135,7 @@ public class LennardJonesGasSimulator implements Simulator {
     }
   }
 
-  private final boolean isWallBetween(Particle particle1, Particle particle2) {
+  private boolean isWallBetween(Particle particle1, Particle particle2) {
     final double x1 = particle1.position().getX();
     final double x2 = particle2.position().getX();
     final double y1 = particle1.position().getY();

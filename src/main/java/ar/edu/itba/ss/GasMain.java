@@ -3,6 +3,7 @@ package ar.edu.itba.ss;
 import ar.edu.itba.ss.generator.RandomParticleGenerator;
 import ar.edu.itba.ss.method.BeemanMovementFunction;
 import ar.edu.itba.ss.method.EulerMovementFunction;
+import ar.edu.itba.ss.method.LennardJonesForceFunction;
 import ar.edu.itba.ss.method.MovementFunction;
 import ar.edu.itba.ss.method.neigbour.CellIndexMethod;
 import ar.edu.itba.ss.model.ImmutableParticle;
@@ -15,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 import javafx.geometry.Point2D;
 
 public class GasMain {
@@ -33,10 +35,32 @@ public class GasMain {
   private static final double EPSILON = 2;
   private static final double RM = 1;
 
+  public static final BiFunction<Particle, Set<Neighbour>, Point2D> FORCE_FUNCTION = new LennardJonesForceFunction(
+      EPSILON, RM);
+
   private static final CellIndexMethod cellIndexMethod = new CellIndexMethod(
       Math.max(BOX_HEIGHT, BOX_WIDTH), false);
 
   public static void main(final String[] args) {
+    final List<Particle> previousParticles = randomParticles();
+    final Map<Particle, Set<Neighbour>> previousNeighbours = cellIndexMethod
+        .apply(previousParticles, RADIUS, RC);
+
+    final List<Particle> currentParticles = new ArrayList<>(previousParticles.size());
+    final Map<Particle, MovementFunction> movementFunctions = new HashMap<>(
+        previousParticles.size());
+
+    addCurrentParticlesAndMovementFunctions(previousParticles, previousNeighbours, currentParticles,
+        movementFunctions);
+
+    final LennardJonesGasSimulator simulator = new LennardJonesGasSimulator(currentParticles,
+        BOX_WIDTH, BOX_HEIGHT, BOX_GAP, DT, RC, movementFunctions);
+
+    // TODO: Agregar logica de movementFunctions dentro de LennardJonesGasSimulator
+  }
+
+  private static List<Particle> randomParticles() {
+
     final Particle minParticle = ImmutableParticle.builder()
         .id(1)
         .position(new Point2D(RADIUS, RADIUS))
@@ -44,6 +68,7 @@ public class GasMain {
         .radius(RADIUS)
         .mass(MASS)
         .build();
+
     final Particle maxParticle = ImmutableParticle.builder()
         .id(N)
         .position(new Point2D(BOX_WIDTH / 2 - RADIUS, BOX_HEIGHT - RADIUS))
@@ -52,33 +77,26 @@ public class GasMain {
         .mass(MASS)
         .build();
 
-    final List<Particle> previousParticles = RandomParticleGenerator
-        .generateParticles(minParticle, maxParticle);
-    final Map<Particle, Set<Neighbour>> previousNeighbours = cellIndexMethod
-        .apply(previousParticles, RADIUS, RC);
+    return RandomParticleGenerator.generateParticles(minParticle, maxParticle);
+  }
 
-    final List<Particle> currentParticles = new ArrayList<>(previousParticles.size());
-    final Map<Particle, MovementFunction> movementFunctions = new HashMap<>();
+  private static void addCurrentParticlesAndMovementFunctions(
+      final List<Particle> previousParticles,
+      final Map<Particle, Set<Neighbour>> previousNeighbours, final List<Particle> currentParticles,
+      final Map<Particle, MovementFunction> movementFunctions) {
     for (final Particle previousParticle : previousParticles) {
-      final Point2D previousAcceleration = LennardJonesGasSimulator.FORCE_FUNCTION
+      final Point2D previousAcceleration = FORCE_FUNCTION
           .apply(previousParticle, previousNeighbours.get(previousParticle))
           .multiply(1.0 / previousParticle.mass());
 
       final Particle currentParticle = EulerMovementFunction
-          .move(previousParticle, previousNeighbours.get(previousParticle), DT,
-              LennardJonesGasSimulator.FORCE_FUNCTION);
+          .move(previousParticle, previousNeighbours.get(previousParticle), DT, FORCE_FUNCTION);
 
-      final MovementFunction movementFunction = new BeemanMovementFunction(
-          LennardJonesGasSimulator.FORCE_FUNCTION,
+      final MovementFunction movementFunction = new BeemanMovementFunction(FORCE_FUNCTION,
           previousAcceleration);
 
       currentParticles.add(currentParticle);
       movementFunctions.put(currentParticle, movementFunction);
     }
-
-    final LennardJonesGasSimulator simulator = new LennardJonesGasSimulator(currentParticles,
-        BOX_WIDTH, BOX_HEIGHT, BOX_GAP, DT, EPSILON, RM, RC, movementFunctions);
-
-    // TODO: Agregar logica de movementFunctions dentro de LennardJonesGasSimulator
   }
 }
