@@ -4,6 +4,7 @@ import static java.lang.Math.pow;
 import static java.util.Objects.requireNonNull;
 
 import ar.edu.itba.ss.model.ImmutableParticle;
+import ar.edu.itba.ss.model.Neighbour;
 import ar.edu.itba.ss.model.Particle;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -28,13 +29,13 @@ public class GearMovementFunction implements MovementFunction {
       120
   };
 
-  private final BiFunction<Particle, Set<Particle>, Point2D> forceFunction;
+  private final BiFunction<Particle, Set<Neighbour>, Point2D> forceFunction;
   private final int order;
   private final double[] alphas;
   private final Point2D[] r;
   private final Point2D[] rp;
 
-  public GearMovementFunction(final BiFunction<Particle, Set<Particle>, Point2D> forceFunction,
+  public GearMovementFunction(final BiFunction<Particle, Set<Neighbour>, Point2D> forceFunction,
       final double[] alphas, final Point2D[] r) {
 
     if (alphas.length != r.length) {
@@ -53,7 +54,7 @@ public class GearMovementFunction implements MovementFunction {
   }
 
   @Override
-  public Particle move(final Particle currentParticle, final Set<Particle> neighbours,
+  public Particle move(final Particle currentParticle, final Set<Neighbour> neighbours,
       final double dt) {
 
     for (int i = order; i >= 0; i--) {

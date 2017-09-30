@@ -15,7 +15,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javafx.geometry.Point2D;
 
-public class GasDiffusionSimulator implements Simulator{
+public class GasDiffusionSimulator implements Simulator {
 
   private final double dt;
   private final Point2D[][] wallsVertical;

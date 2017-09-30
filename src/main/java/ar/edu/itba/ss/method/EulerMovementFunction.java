@@ -3,6 +3,7 @@ package ar.edu.itba.ss.method;
 import static java.util.Objects.requireNonNull;
 
 import ar.edu.itba.ss.model.ImmutableParticle;
+import ar.edu.itba.ss.model.Neighbour;
 import ar.edu.itba.ss.model.Particle;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -10,23 +11,16 @@ import javafx.geometry.Point2D;
 
 public class EulerMovementFunction implements MovementFunction {
 
-  private final BiFunction<Particle, Set<Particle>, Point2D> forceFunction;
+  private final BiFunction<Particle, Set<Neighbour>, Point2D> forceFunction;
 
   public EulerMovementFunction(
-      final BiFunction<Particle, Set<Particle>, Point2D> forceFunction) {
+      final BiFunction<Particle, Set<Neighbour>, Point2D> forceFunction) {
 
     this.forceFunction = requireNonNull(forceFunction);
   }
 
-  @Override
-  public Particle move(final Particle currentParticle, final Set<Particle> neighbours,
-      final double dt) {
-
-    return move(currentParticle, neighbours, dt, forceFunction);
-  }
-
-  public static Particle move(final Particle currentParticle, final Set<Particle> neighbours,
-      final double dt, final BiFunction<Particle, Set<Particle>, Point2D> forceFunction) {
+  public static Particle move(final Particle currentParticle, final Set<Neighbour> neighbours,
+      final double dt, final BiFunction<Particle, Set<Neighbour>, Point2D> forceFunction) {
 
     final Point2D force = forceFunction.apply(currentParticle, neighbours);
 
@@ -43,5 +37,12 @@ public class EulerMovementFunction implements MovementFunction {
         .position(newPosition)
         .velocity(newVelocity)
         .build();
+  }
+
+  @Override
+  public Particle move(final Particle currentParticle, final Set<Neighbour> neighbours,
+      final double dt) {
+
+    return move(currentParticle, neighbours, dt, forceFunction);
   }
 }

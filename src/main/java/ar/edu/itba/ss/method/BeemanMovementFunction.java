@@ -3,6 +3,7 @@ package ar.edu.itba.ss.method;
 import static java.util.Objects.requireNonNull;
 
 import ar.edu.itba.ss.model.ImmutableParticle;
+import ar.edu.itba.ss.model.Neighbour;
 import ar.edu.itba.ss.model.Particle;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -10,10 +11,10 @@ import javafx.geometry.Point2D;
 
 public class BeemanMovementFunction implements MovementFunction {
 
-  private final BiFunction<Particle, Set<Particle>, Point2D> forceFunction;
+  private final BiFunction<Particle, Set<Neighbour>, Point2D> forceFunction;
   private Point2D previousAcceleration;
 
-  public BeemanMovementFunction(final BiFunction<Particle, Set<Particle>, Point2D> forceFunction,
+  public BeemanMovementFunction(final BiFunction<Particle, Set<Neighbour>, Point2D> forceFunction,
       final Point2D previousAcceleration) {
 
     this.forceFunction = requireNonNull(forceFunction);
@@ -21,7 +22,7 @@ public class BeemanMovementFunction implements MovementFunction {
   }
 
   @Override
-  public Particle move(final Particle currentParticle, final Set<Particle> neighbours,
+  public Particle move(final Particle currentParticle, final Set<Neighbour> neighbours,
       final double dt) {
 
     final Point2D currentAcceleration = forceFunction.apply(currentParticle, neighbours)
