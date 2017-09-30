@@ -25,13 +25,11 @@ public class LennardJonesForceFunction implements BiFunction<Particle, Set<Neigh
     double totalForceY = 0;
 
     for (final Neighbour neighbour : neighbours) {
-      final double rX =
-          neighbour.getNeighbourParticle().position().getX() - particle.position().getX();
-      final double rY =
-          neighbour.getNeighbourParticle().position().getY() - particle.position().getY();
-
-      totalForceX += rX != 0 ? force(epsilon, rm, rX) : 0;
-      totalForceY += rY != 0 ? force(epsilon, rm, rY) : 0;
+      final double magnitude = force(epsilon,rm,neighbour.getDistance());
+      final double angle = Math.toRadians(particle.position().subtract(neighbour.getNeighbourParticle().position())
+              .angle(Point2D.ZERO));
+      totalForceX += magnitude * Math.cos(angle);
+      totalForceY += magnitude * Math.sin(angle);
     }
 
     return new Point2D(totalForceX, totalForceY);
