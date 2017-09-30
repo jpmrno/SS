@@ -42,7 +42,7 @@ public class LennardJonesGasSimulator implements Simulator {
   @Override
   public Set<Particle> simulate(Criteria endCriteria, ParticlesWriter writer) {
     double time = 0;
-    int iteration = 0;
+    int iteration = 1;
     List<Particle> particles = initialParticles;
 
     while (!endCriteria.test(time, particles)) {
@@ -58,6 +58,7 @@ public class LennardJonesGasSimulator implements Simulator {
           e.printStackTrace();
         }
       }
+
       time += dt;
       iteration++;
     }

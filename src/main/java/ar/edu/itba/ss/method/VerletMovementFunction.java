@@ -25,19 +25,18 @@ public class VerletMovementFunction implements MovementFunction {
   public Particle move(final Particle currentParticle, final Set<Neighbour> neighbours,
       final double dt) {
 
-    final Point2D currentAcceleration = forceFunction.apply(currentParticle, neighbours)
-        .multiply(1.0 / currentParticle.mass());
+    final Point2D currentForce = forceFunction.apply(currentParticle, neighbours);
 
     final Point2D predictedPosition = currentParticle.position()
         .multiply(2)
         .subtract(previousPosition)
-        .add(currentAcceleration.multiply(dt * dt));
+        .add(currentForce.multiply(dt * dt / currentParticle.mass()));
 
     final Point2D predictedVelocity = predictedPosition
         .subtract(previousPosition)
         .multiply(1.0 / (2.0 * dt));
 
-    previousPosition = predictedPosition;
+    previousPosition = currentParticle.position();
 
     return ImmutableParticle.builder().from(currentParticle)
         .position(predictedPosition)
