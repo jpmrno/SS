@@ -5,7 +5,6 @@ import static java.lang.Math.exp;
 import static java.lang.Math.sqrt;
 import static java.util.Objects.requireNonNull;
 
-import ar.edu.itba.ss.method.MovementFunction;
 import ar.edu.itba.ss.model.ImmutableParticle;
 import ar.edu.itba.ss.model.Neighbour;
 import ar.edu.itba.ss.model.Particle;
@@ -13,17 +12,15 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import javafx.geometry.Point2D;
 
-public class DampedHarmonicOscillator {
+public class AnalyticUDHOscillator {
 
   private final double b;
   private final double k;
-  private final double dt;
-  private final MovementFunction movementFunction;
 
   private Particle particle;
+  private double time;
 
-  public DampedHarmonicOscillator(final Particle particle, final double k, final double b,
-      final double dt, final MovementFunction movementFunction) {
+  public AnalyticUDHOscillator(final Particle particle, final double k, final double b) {
 
     if (requireNonNull(particle).velocity().getY() != 0) {
       throw new IllegalArgumentException("Movement has to be un 1D");
@@ -32,17 +29,16 @@ public class DampedHarmonicOscillator {
     this.particle = particle;
     this.k = k;
     this.b = b;
-    this.dt = dt;
-    this.movementFunction = movementFunction;
+    this.time = 0;
   }
 
-  public Particle move(final Particle particle, final double time) {
+  public Particle move(final Particle particle, final double dt) {
+    time += dt;
 
     final double gamma = b / (2 * particle.mass());
     final double wa = sqrt(k / particle.mass() - gamma * gamma);
 
-    final Point2D newPosition = new Point2D(
-        particle.position().getX() + exp(-gamma * time) * cos(wa * time),
+    final Point2D newPosition = new Point2D(exp(-gamma * time) * cos(wa * time),
         particle.position().getY());
 
     return ImmutableParticle.builder().from(particle)

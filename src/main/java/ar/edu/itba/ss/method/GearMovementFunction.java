@@ -12,7 +12,7 @@ import javafx.geometry.Point2D;
 
 public class GearMovementFunction implements MovementFunction {
 
-  public static final double[] GEAR_5_VALPHAS = new double[]{
+  public static final double[] GEAR_5_VD_ALPHAS = new double[]{
       3.0 / 16.0,
       251.0 / 360.0,
       1.0,
@@ -79,7 +79,8 @@ public class GearMovementFunction implements MovementFunction {
       r[i] = rp[i].add(deltaR2.multiply(alphas[i] * factorials[i] / pow(dt, i)));
     }
 
-    return ImmutableParticle.builder().from(currentParticle)
+    return ImmutableParticle.builder()
+        .from(currentParticle)
         .position(r[0])
         .velocity(r[1])
         .build();
