@@ -10,6 +10,8 @@ import ar.edu.itba.ss.model.ImmutableParticle;
 import ar.edu.itba.ss.model.Neighbour;
 import ar.edu.itba.ss.model.Particle;
 import ar.edu.itba.ss.model.Points;
+import ar.edu.itba.ss.model.criteria.Criteria;
+import ar.edu.itba.ss.model.criteria.FractionCriteria;
 import ar.edu.itba.ss.simulator.LennardJonesGasSimulator;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
+
+import ar.edu.itba.ss.simulator.Simulator;
 import javafx.geometry.Point2D;
 
 public class GasMain {
@@ -26,6 +30,7 @@ public class GasMain {
   private static final double RADIUS = 5;
   private static final double INITIAL_VELOCITY_MAGNITUDE = 10;
   private static final double DT = 0.1;
+  private static final int WRITER_ITERATION = 10;
 
   private static final double BOX_HEIGHT = 200;
   private static final double BOX_WIDTH = 400;
@@ -54,9 +59,12 @@ public class GasMain {
         movementFunctions);
 
     final LennardJonesGasSimulator simulator = new LennardJonesGasSimulator(currentParticles,
-        BOX_WIDTH, BOX_HEIGHT, BOX_GAP, DT, RC, movementFunctions);
+        BOX_WIDTH, BOX_HEIGHT, BOX_GAP, DT, WRITER_ITERATION, RC, movementFunctions);
 
-    // TODO: Agregar logica de movementFunctions dentro de LennardJonesGasSimulator
+    final Criteria criteria = new FractionCriteria(Point2D.ZERO,new Point2D(BOX_WIDTH/2,BOX_HEIGHT),
+            f -> f > 0.9);
+
+    simulator.simulate(criteria,null);
   }
 
   private static List<Particle> randomParticles() {

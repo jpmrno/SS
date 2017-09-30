@@ -7,10 +7,9 @@ import ar.edu.itba.ss.model.ImmutableParticle;
 import ar.edu.itba.ss.model.Neighbour;
 import ar.edu.itba.ss.model.Particle;
 import ar.edu.itba.ss.model.criteria.Criteria;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import java.io.IOException;
+import java.util.*;
 import java.util.stream.Collectors;
 import javafx.geometry.Point2D;
 
@@ -18,35 +17,51 @@ public class LennardJonesGasSimulator implements Simulator {
 
   private final List<Particle> initialParticles;
   private final double dt;
+  private final int writerIteration;
   private final double boxWidth;
   private final double boxHeight;
   private final double middleGap;
   private final CellIndexMethod cim;
   private final double rc;
+  private final Map<Particle, MovementFunction> movementFunctions;
 
   public LennardJonesGasSimulator(final List<Particle> initialParticles, final double boxWidth,
-      final double boxHeight, final double middleGap, final double dt, double rc,
+      final double boxHeight, final double middleGap, final double dt, final int writerIteration, double rc,
       final Map<Particle, MovementFunction> movementFunctions) {
     this.initialParticles = initialParticles;
     this.dt = dt;
+    this.writerIteration = writerIteration;
     this.boxWidth = boxWidth;
     this.boxHeight = boxHeight;
     this.middleGap = middleGap;
     this.rc = rc;
     this.cim = new CellIndexMethod(boxHeight > boxWidth ? boxHeight : boxWidth, false);
+    this.movementFunctions = movementFunctions;
   }
 
   @Override
   public Set<Particle> simulate(Criteria endCriteria, ParticlesWriter writer) {
     double time = 0;
+    int iteration = 0;
     List<Particle> particles = initialParticles;
 
     while (!endCriteria.test(time, particles)) {
       Map<Particle, Set<Neighbour>> neighbours = cim
           .apply(particles, particles.get(0).radius(), rc);
       particles = nextParticles(neighbours);
+
+      if(iteration == writerIteration){
+        iteration = 0;
+        try {
+          writer.write(time,particles);
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      }
+      time += dt;
+      iteration++;
     }
-    return null;
+    return new HashSet<>(particles);
   }
 
   private List<Particle> nextParticles(Map<Particle, Set<Neighbour>> neighbours) {
@@ -63,8 +78,8 @@ public class LennardJonesGasSimulator implements Simulator {
         .collect(Collectors.toSet());
     addWallParticles(particle, neighbours);
 
-    //TODO: finish
-    return null;
+    MovementFunction function = movementFunctions.get(particle);
+    return function.move(particle, neighbours, dt);
   }
 
   private void addWallParticles(Particle particle, Set<Neighbour> neighbours) {
