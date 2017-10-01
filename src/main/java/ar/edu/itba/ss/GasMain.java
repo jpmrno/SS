@@ -27,20 +27,20 @@ public class GasMain {
 
   private static final int N = 10;
   private static final double MASS = 0.1;
-  private static final double RADIUS = 5;
+  private static final double RADIUS = 0;
   private static final double INITIAL_VELOCITY_MAGNITUDE = 10;
-  private static final double DT = 0.1;
-  private static final int WRITER_ITERATION = 1;
+  private static final double DT = 0.001;
+  private static final int WRITER_ITERATION = 100;
 
   private static final double BOX_HEIGHT = 200;
   private static final double BOX_WIDTH = 400;
   private static final double BOX_GAP = 10;
 
-  private static final double RC = 20;
+  private static final double RC = 5;
   private static final double EPSILON = 2;
   private static final double RM = 1;
 
-  public static final BiFunction<Particle, Set<Neighbour>, Point2D> FORCE_FUNCTION =
+  private static final BiFunction<Particle, Set<Neighbour>, Point2D> FORCE_FUNCTION =
       new LennardJonesForceFunction(EPSILON, RM);
 
   private static final CellIndexMethod cellIndexMethod = new CellIndexMethod(
@@ -55,8 +55,8 @@ public class GasMain {
     final Map<Particle, MovementFunction> movementFunctions = new HashMap<>(
         previousParticles.size());
 
-    euler_addCurrentParticlesAndMovementFunctions(previousParticles, previousNeighbours, currentParticles,
-        movementFunctions);
+    eulerAddCurrentParticlesAndMovementFunctions(previousParticles, previousNeighbours,
+        currentParticles, movementFunctions);
 
     final LennardJonesGasSimulator simulator = new LennardJonesGasSimulator(currentParticles,
         BOX_WIDTH, BOX_HEIGHT, BOX_GAP, DT, WRITER_ITERATION, RC, movementFunctions);
@@ -70,7 +70,6 @@ public class GasMain {
   }
 
   private static List<Particle> randomParticles() {
-
     final Particle minParticle = ImmutableParticle.builder()
         .id(1)
         .position(new Point2D(RADIUS, RADIUS))
@@ -110,14 +109,13 @@ public class GasMain {
     }
   }
 
-  private static void euler_addCurrentParticlesAndMovementFunctions(
+  private static void eulerAddCurrentParticlesAndMovementFunctions(
       final List<Particle> previousParticles,
       final Map<Particle, Set<Neighbour>> previousNeighbours, final List<Particle> currentParticles,
       final Map<Particle, MovementFunction> movementFunctions) {
 
+    final MovementFunction movementFunction = new EulerMovementFunction(FORCE_FUNCTION);
     for (final Particle previousParticle : previousParticles) {
-      final MovementFunction movementFunction = new EulerMovementFunction(FORCE_FUNCTION );
-
       currentParticles.add(previousParticle);
       movementFunctions.put(previousParticle, movementFunction);
     }
