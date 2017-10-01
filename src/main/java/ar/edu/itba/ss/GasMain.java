@@ -1,7 +1,7 @@
 package ar.edu.itba.ss;
 
 import ar.edu.itba.ss.generator.RandomParticleGenerator;
-import ar.edu.itba.ss.io.writer.AppendFileParticlesWriter;
+import ar.edu.itba.ss.io.writer.BoxParticleWritter;
 import ar.edu.itba.ss.io.writer.ParticlesWriter;
 import ar.edu.itba.ss.method.BeemanMovementFunction;
 import ar.edu.itba.ss.method.EulerMovementFunction;
@@ -64,7 +64,8 @@ public class GasMain {
     final Criteria criteria = new FractionCriteria(Point2D.ZERO,
         new Point2D(BOX_WIDTH / 2, BOX_HEIGHT), f -> f < 0.9);
 
-    final ParticlesWriter particlesWriter = new AppendFileParticlesWriter("ljg_simulation");
+    final ParticlesWriter particlesWriter = new BoxParticleWritter("ljg_simulation", BOX_WIDTH,
+        BOX_HEIGHT, BOX_GAP);
 
     simulator.simulate(criteria, particlesWriter);
   }
