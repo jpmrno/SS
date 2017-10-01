@@ -60,7 +60,7 @@ public class GearMovementFunction implements MovementFunction {
     for (int i = order; i >= 0; i--) {
       rp[i] = r[i];
 
-      for (int j = i + 1, l = 0; j < order + 1; j++, l++) {
+      for (int j = i + 1, l = 1; j < order + 1; j++, l++) {
         rp[i] = rp[i].add(r[j].multiply(pow(dt, l) / factorials[l]));
       }
     }
