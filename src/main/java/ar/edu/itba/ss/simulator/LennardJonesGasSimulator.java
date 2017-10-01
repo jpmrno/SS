@@ -53,7 +53,7 @@ public class LennardJonesGasSimulator implements Simulator {
       if(iteration == writerIteration){
         iteration = 0;
         try {
-          writer.write(time,particles);
+          writer.write(time,neighbours);
         } catch (IOException e) {
           e.printStackTrace();
         }
