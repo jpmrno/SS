@@ -123,7 +123,8 @@ public class LennardJonesGasSimulator implements Simulator {
     distanceToExtremeWall = particle.position().getX();
     distanceToMiddleWall = distanceToExtremeWall - boxWidth / 2;
     if (distanceToMiddleWall > 0 && distanceToMiddleWall <= rc &&
-            (particle.position().getY() <= gapStart || particle.position().getY() >= gapEnd)) {
+            (particle.position().getY() <= gapStart || particle.position().getY() >= gapEnd) &&
+            !(particle.velocity().getX() > 0 && particle.position().getY() > gapStart - 5 && particle.position().getY() < gapEnd + 5)) {
       neighbours.add(new Neighbour(ImmutableParticle.builder()
           .id(wallId--).position(new Point2D(boxWidth / 2, particle.position().getY()))
           .mass(Double.POSITIVE_INFINITY)
@@ -139,7 +140,8 @@ public class LennardJonesGasSimulator implements Simulator {
     distanceToExtremeWall = boxWidth - particle.position().getX();
     distanceToMiddleWall = distanceToExtremeWall - boxWidth / 2;
     if (distanceToMiddleWall > 0 && distanceToMiddleWall <= rc &&
-            (particle.position().getY() <= gapStart || particle.position().getY() >= gapEnd)) {
+            (particle.position().getY() <= gapStart || particle.position().getY() >= gapEnd) &&
+            !(particle.velocity().getX() < 0 && particle.position().getY() > gapStart - 5 && particle.position().getY() < gapEnd + 5)) {
       neighbours.add(new Neighbour(ImmutableParticle.builder()
           .id(wallId--).position(new Point2D(boxWidth / 2, particle.position().getY()))
           .mass(Double.POSITIVE_INFINITY)
