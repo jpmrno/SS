@@ -29,8 +29,8 @@ public class GasMain {
   private static final double MASS = 0.1;
   private static final double RADIUS = 0;
   private static final double INITIAL_VELOCITY_MAGNITUDE = 10;
-  private static final double DT = 0.001;
-  private static final int WRITER_ITERATION = 100;
+  private static final double DT = 0.000001;
+  private static final int WRITER_ITERATION = (int) (1 / DT) / 10;
 
   private static final double BOX_HEIGHT = 200;
   private static final double BOX_WIDTH = 400;
@@ -62,7 +62,7 @@ public class GasMain {
         BOX_WIDTH, BOX_HEIGHT, BOX_GAP, DT, WRITER_ITERATION, RC, movementFunctions);
 
     final Criteria criteria = new FractionCriteria(Point2D.ZERO,
-        new Point2D(BOX_WIDTH / 2, BOX_HEIGHT), f -> f < 0.9);
+        new Point2D(BOX_WIDTH / 2, BOX_HEIGHT), f -> f < 0.5);
 
     final ParticlesWriter particlesWriter = new BoxParticleWritter("ljg_simulation", BOX_WIDTH,
         BOX_HEIGHT, BOX_GAP);
