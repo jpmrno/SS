@@ -7,10 +7,7 @@ import javafx.application.Platform;
 import javafx.geometry.Point2D;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class EnergyWriter implements ParticlesWriter{
 
@@ -23,8 +20,8 @@ public class EnergyWriter implements ParticlesWriter{
         this.rm = rm;
         this.points = new ArrayList<>();
         Scatter2DChart.initialize("Energía del sistema a lo largo del tiempo",
-                "tiempo [s]", 0, 3, 1,
-                "energía [J]", 0, 1000, 100);
+                "tiempo [s]", 0, 5, 1,
+                "energía [J]", 4000, 7000, 250);
     }
 
     @Override
@@ -39,7 +36,6 @@ public class EnergyWriter implements ParticlesWriter{
         double potential = neighbours.entrySet().stream()
                 .mapToDouble(e -> potentialEnergy(e.getKey(),e.getValue())).sum();
         double energy = kinetic + potential;
-        System.out.println(energy);
         points.add(new Point2D(time, energy));
     }
 
@@ -61,5 +57,14 @@ public class EnergyWriter implements ParticlesWriter{
 
     public void addSeries(String name){
         Platform.runLater(() -> Scatter2DChart.addSeries(name, points));
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void clear(){
+        points = new LinkedList<>();
     }
 }

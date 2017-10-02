@@ -172,6 +172,8 @@ public class LennardJonesGasSimulator implements Simulator {
     final double gapStart = (boxHeight / 2) - (middleGap / 2);
     final double gapEnd = boxHeight - gapStart;
 
-    return yp > gapStart && yp < gapEnd;
+    return yp > gapStart && yp < gapEnd &&
+            ((x1 > boxWidth/2 && x2 < boxWidth/2) ||
+                    (x1 < boxWidth/2 && x2 > boxWidth/2));
   }
 }
