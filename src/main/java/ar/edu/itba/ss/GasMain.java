@@ -21,15 +21,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 import javafx.geometry.Point2D;
 
 public class GasMain {
 
-  private static final int N = 10;
+  private static final int N = 1000;
   private static final double MASS = 0.1;
-  private static final double RADIUS = 0;
+  private static final double RADIUS = 2;
   private static final double INITIAL_VELOCITY_MAGNITUDE = 10;
-  private static final double DT = 0.000001;
+  private static final double DT = 0.0001;
   private static final int WRITER_ITERATION = (int) (1 / DT) / 10;
 
   private static final double BOX_HEIGHT = 200;
@@ -47,9 +48,12 @@ public class GasMain {
       Math.max(BOX_HEIGHT, BOX_WIDTH), false);
 
   public static void main(final String[] args) {
-    final List<Particle> previousParticles = randomParticles();
+    List<Particle> previousParticles = randomParticles();
+    previousParticles = previousParticles.stream()
+        .map(p -> ImmutableParticle.builder().from(p).radius(0).build())
+        .collect(Collectors.toList());
     final Map<Particle, Set<Neighbour>> previousNeighbours = cellIndexMethod
-        .apply(previousParticles, RADIUS, RC);
+        .apply(previousParticles, previousParticles.get(0).radius(), RC);
 
     final List<Particle> currentParticles = new ArrayList<>(previousParticles.size());
     final Map<Particle, MovementFunction> movementFunctions = new HashMap<>(
