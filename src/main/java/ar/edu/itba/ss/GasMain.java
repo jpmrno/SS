@@ -15,6 +15,7 @@ import ar.edu.itba.ss.model.Points;
 import ar.edu.itba.ss.model.criteria.Criteria;
 import ar.edu.itba.ss.model.criteria.FractionCriteria;
 import ar.edu.itba.ss.simulator.LennardJonesGasSimulator;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -59,7 +60,7 @@ public class GasMain {
     final Map<Particle, MovementFunction> movementFunctions = new HashMap<>(
         previousParticles.size());
 
-    eulerAddCurrentParticlesAndMovementFunctions(previousParticles, previousNeighbours,
+    beemanAddCurrentParticlesAndMovementFunctions(previousParticles, previousNeighbours,
         currentParticles, movementFunctions);
 
     final LennardJonesGasSimulator simulator = new LennardJonesGasSimulator(currentParticles,
@@ -70,6 +71,12 @@ public class GasMain {
 
     final ParticlesWriter particlesWriter = new BoxParticleWritter("ljg_simulation", BOX_WIDTH,
         BOX_HEIGHT, BOX_GAP);
+
+    try {
+      particlesWriter.write(0, currentParticles);
+    } catch (IOException e) {
+      System.err.println("Could not write initial particles");
+    }
 
     simulator.simulate(criteria, particlesWriter);
   }
@@ -94,7 +101,7 @@ public class GasMain {
     return RandomParticleGenerator.generateParticles(minParticle, maxParticle);
   }
 
-  private static void addCurrentParticlesAndMovementFunctions(
+  private static void beemanAddCurrentParticlesAndMovementFunctions(
       final List<Particle> previousParticles,
       final Map<Particle, Set<Neighbour>> previousNeighbours, final List<Particle> currentParticles,
       final Map<Particle, MovementFunction> movementFunctions) {
