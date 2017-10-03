@@ -1,9 +1,7 @@
 package ar.edu.itba.ss;
 
 import ar.edu.itba.ss.generator.RandomParticleGenerator;
-import ar.edu.itba.ss.io.writer.BoxParticleWritter;
-import ar.edu.itba.ss.io.writer.ParticlesWriter;
-import ar.edu.itba.ss.io.writer.VelocityHistogramWriter;
+import ar.edu.itba.ss.io.writer.*;
 import ar.edu.itba.ss.method.BeemanMovementFunction;
 import ar.edu.itba.ss.method.EulerMovementFunction;
 import ar.edu.itba.ss.method.LennardJonesForceFunction;
@@ -13,10 +11,7 @@ import ar.edu.itba.ss.model.ImmutableParticle;
 import ar.edu.itba.ss.model.Neighbour;
 import ar.edu.itba.ss.model.Particle;
 import ar.edu.itba.ss.model.Points;
-import ar.edu.itba.ss.model.criteria.Criteria;
-import ar.edu.itba.ss.model.criteria.EquilibriumOscilationCriteria;
-import ar.edu.itba.ss.model.criteria.FractionCriteria;
-import ar.edu.itba.ss.model.criteria.VelocityHistogramCriteria;
+import ar.edu.itba.ss.model.criteria.*;
 import ar.edu.itba.ss.simulator.LennardJonesGasSimulator;
 import javafx.geometry.Point2D;
 
@@ -71,6 +66,11 @@ public class GasMainHistogram {
                 new Point2D(BOX_WIDTH/2,BOX_HEIGHT));
         final VelocityHistogramWriter velocityHistogramWriter =
                 new VelocityHistogramWriter(21,velocityHistogramCriteria);
+        final ParticlesInFirstBoxWriter particlesInFirstBoxWriter = new ParticlesInFirstBoxWriter(BOX_WIDTH, BOX_HEIGHT);
+        List<ParticlesWriter> writers = new LinkedList<>();
+        writers.add(particlesInFirstBoxWriter);
+        writers.add(velocityHistogramWriter);
+        final MultiWriter multiWriter = new MultiWriter(writers);
 
         final Criteria criteria = new EquilibriumOscilationCriteria(Point2D.ZERO,
                 new Point2D(BOX_WIDTH/2,BOX_HEIGHT), 3,0.05);
@@ -84,8 +84,9 @@ public class GasMainHistogram {
 //            System.err.println("Could not write initial particles");
 //        }
 
-        //TODO: use a MultiWriter that also includes a ParticlesInFirstBoxWriter
-        simulator.simulate(criteria, velocityHistogramWriter);
+
+        simulator.simulate(criteria, multiWriter);
+        particlesInFirstBoxWriter.addSeries("");
     }
 
     private static List<Particle> randomParticles() {
