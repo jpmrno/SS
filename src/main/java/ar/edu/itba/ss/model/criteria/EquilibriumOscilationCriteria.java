@@ -37,6 +37,8 @@ public class EquilibriumOscilationCriteria implements Criteria{
             if(iterationsInEquilibriumCounter == iterationsInEquilibrium){
                 return true;
             }
+        } else {
+            iterationsInEquilibriumCounter = 0;
         }
         return false;
     }
