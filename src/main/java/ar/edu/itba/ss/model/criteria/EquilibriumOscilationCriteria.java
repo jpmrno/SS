@@ -17,10 +17,10 @@ public class EquilibriumOscilationCriteria implements Criteria{
     private int iterationsInEquilibriumCounter;
 
     public EquilibriumOscilationCriteria(Point2D start, Point2D end,
-                                         int interationsInEquilibrium, double error){
+                                         int iterationsInEquilibrium, double error){
         this.start = start;
         this.end = end;
-        this.iterationsInEquilibrium = interationsInEquilibrium;
+        this.iterationsInEquilibrium = iterationsInEquilibrium;
         this.error = error;
         this.iterationsInEquilibriumCounter = 0;
     }
