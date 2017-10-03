@@ -49,8 +49,8 @@ public class VelocityHistogramWriter implements ParticlesWriter{
             System.out.println("Between " + i + " and " + (i+1) + ":");
             System.out.println("\t" + (double)categories[i]/amountOfParticles);
         }
-        System.out.println("More than " + (amountOfCategories + 1) + ":");
-        System.out.println("\t" + (double)categories[amountOfCategories]/amountOfParticles);
+        System.out.println("More than " + (amountOfCategories - 1) + ":");
+        System.out.println("\t" + (double)categories[amountOfCategories - 1]/amountOfParticles);
         System.out.println("--------------------");
     }
 }

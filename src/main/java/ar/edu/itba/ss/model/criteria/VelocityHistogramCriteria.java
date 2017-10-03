@@ -48,5 +48,6 @@ public class VelocityHistogramCriteria implements Criteria{
                 .map(Particle::position).collect(Collectors.toList());
         final double fraction =
                 (double) Points.between(positions, start, end) / positions.size();
+        return fraction;
     }
 }
