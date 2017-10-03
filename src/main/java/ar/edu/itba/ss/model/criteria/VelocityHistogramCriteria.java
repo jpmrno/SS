@@ -36,7 +36,7 @@ public class VelocityHistogramCriteria implements Criteria{
         } else if (!checked75 && fractionInFirstBox(particles) <= 0.75){
             checked75 = true;
             return true;
-        } else if (!checked50 && fractionInFirstBox(particles) <= 0.5){
+        } else if (!checked50 && fractionInFirstBox(particles) <= 0.45){
             checked50 = true;
             return true;
         }
