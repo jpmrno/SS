@@ -22,15 +22,16 @@ public class OscillatorMain {
   private static final double K = 10000;
   private static final double B = 100;
   private static final double DT = 0.01;
-  private static final double TIMES = 5 / DT;
+  private static final double TIMES = 2.5 / DT;
 
   private static final UnderdampedOscillatorForceFunction FORCE_FUNCTION =
       new UnderdampedOscillatorForceFunction(K, B);
 
   public static void main(String[] args) {
-    Scatter2DChart.initialize("Oscillator", "Time", 0, TIMES * DT, DT, "Position", -1, 1, 0.1);
+    Scatter2DChart
+        .initialize("Oscillator", "Time [s]", 0, TIMES * DT, DT, "Position [m]", -1, 1, 0.1);
     try {
-      Thread.sleep(1000);
+      Thread.sleep(2000);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
@@ -43,23 +44,44 @@ public class OscillatorMain {
         .mass(MASS)
         .build();
 
-    addAnaliticToGraph(particle);
-
     final MovementFunction eulerFunction = new EulerMovementFunction(FORCE_FUNCTION);
 
     final NumericalUDHOscillator eulerUDHOscillator = new NumericalUDHOscillator(particle, K, B,
         eulerFunction);
 
-    addEulerToGraph(particle, eulerUDHOscillator);
+    final List<Point2D> pointsAnalytic = addAnalyticToGraph(particle);
+    Platform.runLater(() -> Scatter2DChart.addSeries("Analytic", pointsAnalytic));
 
-    addVerletToGraph(particle, eulerUDHOscillator);
+    final List<Point2D> pointsEuler = addEulerToGraph(particle, eulerUDHOscillator);
+    Platform.runLater(() -> Scatter2DChart.addSeries("Euler", pointsEuler));
+    System.out.println("Euler mse: " + quadraticMeanError(pointsAnalytic, pointsEuler));
 
-    addBeemanToGraph(particle, eulerUDHOscillator);
+    final List<Point2D> pointsVerlet = addVerletToGraph(particle, eulerUDHOscillator);
+    Platform.runLater(() -> Scatter2DChart.addSeries("Verlet", pointsVerlet));
+    System.out.println("Verlet mse: " + quadraticMeanError(pointsAnalytic, pointsVerlet));
 
-    addGear5ToGraph(particle);
+    final List<Point2D> pointsBeeman = addBeemanToGraph(particle, eulerUDHOscillator);
+    Platform.runLater(() -> Scatter2DChart.addSeries("Beeman", pointsBeeman));
+    System.out.println("Beeman mse: " + quadraticMeanError(pointsAnalytic, pointsBeeman));
+
+    final List<Point2D> pointsGear = addGear5ToGraph(particle);
+    Platform.runLater(() -> Scatter2DChart.addSeries("Gear", pointsGear));
+    System.out.println("Gear mse: " + quadraticMeanError(pointsAnalytic, pointsGear));
   }
 
-  private static void addEulerToGraph(final Particle particle,
+  private static double quadraticMeanError(final List<Point2D> pointsAnalytic,
+      final List<Point2D> pointsNumerical) {
+
+    double quadraticError = 0;
+    for (int i = 0; i < pointsAnalytic.size(); i++) {
+      final double error = pointsAnalytic.get(i).getY() - pointsNumerical.get(i).getY();
+      quadraticError += error * error;
+    }
+
+    return quadraticError / pointsAnalytic.size();
+  }
+
+  private static List<Point2D> addEulerToGraph(final Particle particle,
       final NumericalUDHOscillator eulerUDHOscillator) {
 
     Particle nextParticle = particle;
@@ -69,23 +91,23 @@ public class OscillatorMain {
       pointsEuler.add(new Point2D(DT * i, nextParticle.position().getX()));
     }
 
-    Platform.runLater(() -> Scatter2DChart.addSeries("Euler", pointsEuler));
+    return pointsEuler;
   }
 
-  private static void addAnaliticToGraph(final Particle particle) {
+  private static List<Point2D> addAnalyticToGraph(final Particle particle) {
     final AnalyticUDHOscillator analyticUDHOscillator = new AnalyticUDHOscillator(particle, K, B);
 
-    Particle nextParticle = particle;
+    Particle nextParticle = analyticUDHOscillator.move(particle, DT);
     final List<Point2D> pointsAnalytic = new LinkedList<>();
     for (int i = 1; i <= TIMES; i++) {
       nextParticle = analyticUDHOscillator.move(nextParticle, DT);
       pointsAnalytic.add(new Point2D(DT * i, nextParticle.position().getX()));
     }
 
-    Platform.runLater(() -> Scatter2DChart.addSeries("Analytic", pointsAnalytic));
+    return pointsAnalytic;
   }
 
-  private static void addVerletToGraph(final Particle particle,
+  private static List<Point2D> addVerletToGraph(final Particle particle,
       final NumericalUDHOscillator eulerUDHOscillator) {
     final MovementFunction verletFunction = new VerletMovementFunction(FORCE_FUNCTION,
         particle.position());
@@ -100,10 +122,10 @@ public class OscillatorMain {
       pointsVerlet.add(new Point2D(DT * i, nextParticle.position().getX()));
     }
 
-    Platform.runLater(() -> Scatter2DChart.addSeries("Verlet", pointsVerlet));
+    return pointsVerlet;
   }
 
-  private static void addBeemanToGraph(final Particle particle,
+  private static List<Point2D> addBeemanToGraph(final Particle particle,
       final NumericalUDHOscillator eulerUDHOscillator) {
     final MovementFunction beemanFunction = new VDBeemanMovementFunction(FORCE_FUNCTION,
         FORCE_FUNCTION.apply(particle, null).multiply(1.0 / particle.mass()));
@@ -118,10 +140,10 @@ public class OscillatorMain {
       pointsBeeman.add(new Point2D(DT * i, nextParticle.position().getX()));
     }
 
-//    Platform.runLater(() -> Scatter2DChart.addSeries("Beeman", pointsBeeman));
+    return pointsBeeman;
   }
 
-  private static void addGear5ToGraph(final Particle particle) {
+  private static List<Point2D> addGear5ToGraph(final Particle particle) {
     final Point2D[] r = new Point2D[5 + 1];
     r[0] = particle.position();
     r[1] = particle.velocity();
@@ -142,6 +164,6 @@ public class OscillatorMain {
       pointsGear.add(new Point2D(DT * i, nextParticle.position().getX()));
     }
 
-    Platform.runLater(() -> Scatter2DChart.addSeries("Gear", pointsGear));
+    return pointsGear;
   }
 }

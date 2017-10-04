@@ -1,70 +1,68 @@
 package ar.edu.itba.ss.io.writer;
 
+import static java.lang.Math.pow;
+
 import ar.edu.itba.ss.model.Neighbour;
 import ar.edu.itba.ss.model.Particle;
-import ar.edu.itba.ss.model.Scatter2DChart;
-import javafx.application.Platform;
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javafx.geometry.Point2D;
 
-import java.io.IOException;
-import java.util.*;
+public class EnergyWriter implements ParticlesWriter {
 
-public class EnergyWriter implements ParticlesWriter{
+  private List<Point2D> points;
+  private final double epsilon;
+  private final double rm;
 
-    List<Point2D> points;
-    final double epsilon;
-    final double rm;
+  public EnergyWriter(double epsilon, double rm) {
+    this.epsilon = epsilon;
+    this.rm = rm;
+    this.points = new LinkedList<>();
+  }
 
-    public EnergyWriter(double epsilon, double rm){
-        this.epsilon = epsilon;
-        this.rm = rm;
-        this.points = new ArrayList<>();
-        Scatter2DChart.initialize("Energía del sistema a lo largo del tiempo",
-                "tiempo [s]", 0, 5, 1,
-                "energía [J]", 4000, 7000, 250);
+  @Override
+  public void write(double time, List<Particle> particles) throws IOException {
+    // Ignore
+  }
+
+  @Override
+  public void write(double time, Map<Particle, Set<Neighbour>> neighbours) throws IOException {
+    final double kinetic = neighbours.keySet().stream()
+        .mapToDouble(this::kineticEnergy)
+        .sum();
+    final double potential = neighbours.entrySet().stream()
+        .mapToDouble(e -> potentialEnergy(e.getKey(), e.getValue()))
+        .sum();
+
+    points.add(new Point2D(time, kinetic + potential));
+  }
+
+  private double kineticEnergy(final Particle particle) {
+    return 0.5 * particle.mass()
+        * particle.velocity().magnitude() * particle.velocity().magnitude();
+  }
+
+  private double potentialEnergy(final Particle particle, final Set<Neighbour> neighbours) {
+    double potential = 0;
+
+    for (Neighbour neighbour : neighbours) {
+      potential += epsilon *
+          (pow(rm / neighbour.getDistance(), 12) - 2.0 * pow(rm / neighbour.getDistance(), 6));
+      if (neighbour.getNeighbourParticle().id() < 0) {
+        potential += epsilon *
+            (pow(rm / neighbour.getDistance(), 12) - 2.0 * pow(rm / neighbour.getDistance(), 6));
+      }
     }
 
-    @Override
-    public void write(double time, List<Particle> particles) throws IOException {
+    return potential;
+  }
 
-    }
-
-    @Override
-    public void write(double time, Map<Particle, Set<Neighbour>> neighbours) throws IOException {
-        double kinetic = neighbours.keySet().stream()
-                .mapToDouble(p -> kineticEnergy(p)).sum();
-        double potential = neighbours.entrySet().stream()
-                .mapToDouble(e -> potentialEnergy(e.getKey(),e.getValue())).sum();
-        double energy = kinetic + potential;
-        points.add(new Point2D(time, energy));
-    }
-
-    private double kineticEnergy(Particle particle){
-        return 0.5 * particle.mass() * particle.velocity().magnitude() * particle.velocity().magnitude();
-    }
-
-    private double potentialEnergy(Particle particle, Set<Neighbour> neighbours){
-        double potential = 0;
-        double rm7 = Math.pow(rm,7);
-        double rm13 = Math.pow(rm,13);
-        for(Neighbour neighbour : neighbours){
-            potential += 12 * epsilon * (1.0/rm) *
-                    (rm7 / (6 * Math.pow(neighbour.getDistance(),6)) -
-                            rm13 / (12 * Math.pow(neighbour.getDistance(),12)));
-        }
-        return potential;
-    }
-
-    public void addSeries(String name){
-        Platform.runLater(() -> Scatter2DChart.addSeries(name, points));
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void clear(){
-        points = new LinkedList<>();
-    }
+  public List<Point2D> getPoints() {
+    final List<Point2D> oldPoints = points;
+    points = new LinkedList<>();
+    return oldPoints;
+  }
 }

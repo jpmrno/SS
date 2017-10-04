@@ -20,6 +20,14 @@ public class GearMovementFunction implements MovementFunction {
       1.0 / 6.0,
       1.0 / 60.0,
   };
+  public static final double[] GEAR_5_ALPHAS = new double[]{
+      3.0 / 20.0,
+      251.0 / 360.0,
+      1.0,
+      11.0 / 18.0,
+      1.0 / 6.0,
+      1.0 / 60.0,
+  };
   private static final double[] factorials = new double[]{
       1,
       1,
