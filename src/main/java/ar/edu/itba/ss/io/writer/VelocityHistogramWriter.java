@@ -19,38 +19,52 @@ public class VelocityHistogramWriter implements ParticlesWriter{
     @Override
     public void write(double time, List<Particle> particles) throws IOException {
         if(criteria.test(time,particles)){
-            int[] categories = calculateCategories(particles);
-            printCategories(particles, categories);
+            double[] categories = setCategories(particles);
+            int[] distribution = calculateDistribution(particles,categories);
+            print(particles, distribution, categories);
         }
     }
 
-    private int[] calculateCategories(List<Particle> particles){
-        int[] categories = new int[amountOfCategories];
+    private int[] calculateDistribution(List<Particle> particles, double[] categories){
+        int[] distribution = new int[amountOfCategories];
         for(Particle particle : particles){
             final double velocity = particle.velocity().magnitude();
             boolean alreadyInCategory = false;
             for (int i = 1; i < amountOfCategories; i++) {
-                if(velocity < i && !alreadyInCategory){
-                    categories[i-1]++;
+                if(velocity < categories[i] && !alreadyInCategory){
+                    distribution[i-1]++;
                     alreadyInCategory = true;
                 }
             }
             if(!alreadyInCategory){
-                categories[amountOfCategories-1]++;
+                distribution[amountOfCategories-1]++;
             }
         }
-        return categories;
+        return distribution;
     }
 
-    private void printCategories(List<Particle> particles, int[] categories){
+    private void print(List<Particle> particles, int[] distributions, double[] categories){
         final int amountOfParticles = particles.size();
         System.out.println("--------------------");
         for (int i = 0; i < amountOfCategories - 1; i++) {
-            System.out.println("Between " + i + " and " + (i+1) + ":");
-            System.out.println("\t" + (double)categories[i]/amountOfParticles);
+            System.out.println("Category " + categories[i] + ":");
+            System.out.println("\t" + (double)distributions[i]/amountOfParticles);
         }
-        System.out.println("More than " + (amountOfCategories - 1) + ":");
-        System.out.println("\t" + (double)categories[amountOfCategories - 1]/amountOfParticles);
+        System.out.println("More than " + categories[amountOfCategories - 1] + ":");
+        System.out.println("\t" + (double)distributions[amountOfCategories - 1]/amountOfParticles);
         System.out.println("--------------------");
+    }
+
+    private double[] setCategories(List<Particle> particles){
+        double[] categories = new double[amountOfCategories];
+        double max = particles.stream().mapToDouble(p->p.velocity().magnitude()).max().getAsDouble();
+        double min = particles.stream().mapToDouble(p->p.velocity().magnitude()).min().getAsDouble();
+        double delta = (max - min)/amountOfCategories;
+        double deltaAccum = 0;
+        for (int i = 0; i < amountOfCategories; i++) {
+            categories[i] = deltaAccum;
+            deltaAccum += delta;
+        }
+        return categories;
     }
 }
