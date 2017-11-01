@@ -112,9 +112,10 @@ public class PedestrianSimulator implements Simulator {
     final Point2D target = target(pedestrian);
     final Point2D newVelocity = target.subtract(pedestrian.position())
         .normalize().multiply(velocityMagnitude);
+//    System.out.println(newVelocity);
 
-    final double newX = pedestrian.position().getX() + velocityMagnitude * dt;
-    final double newY = pedestrian.position().getY() + velocityMagnitude * dt;
+    final double newX = pedestrian.position().getX() + newVelocity.getX() * dt;
+    final double newY = pedestrian.position().getY() + newVelocity.getY() * dt;
 
     double newRadius = pedestrian.radius() + maxRadius / (tao / dt);
     if(newRadius > maxRadius){
@@ -132,9 +133,10 @@ public class PedestrianSimulator implements Simulator {
     Point2D normalUnitVector = Point2D.ZERO;
 
     for(Neighbour neighbour : neighbours){
-      normalUnitVector.add(pedestrian.position().subtract(neighbour.getNeighbourParticle().position()));
+      normalUnitVector = normalUnitVector.add(pedestrian.position().subtract(neighbour.getNeighbourParticle().position()));
     }
-    normalUnitVector.normalize();
+    normalUnitVector = normalUnitVector.normalize();
+//    System.out.println(normalUnitVector);
 
     final Point2D newVelocity = normalUnitVector.multiply(vdMax);
     final Point2D newPosition = pedestrian.position().add(newVelocity.multiply(dt));

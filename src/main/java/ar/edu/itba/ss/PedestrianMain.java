@@ -18,7 +18,7 @@ public class PedestrianMain {
   private static final double BOX_HEIGHT = 20;
   private static final double BOX_WIDTH = 20;
   private static final double GAP = 1.2;
-  private static final int N = 100;
+  private static final int N = 200;
   private static final double MASS = 0.01;
   private static final double DT = 0.001;
   private static final int WRITER_ITERATIONS = (int) (1 / DT) / 100;
@@ -34,14 +34,14 @@ public class PedestrianMain {
         .radius(MAX_RADIUS)
         .mass(MASS)
         .velocity(Point2D.ZERO)
-        .position(new Point2D(MAX_RADIUS, MAX_RADIUS))
+        .position(new Point2D(0, 0))
         .build();
     final Particle maxPedestrian = ImmutableParticle.builder()
         .id(N)
         .radius(MAX_RADIUS)
         .mass(MASS)
         .velocity(Point2D.ZERO)
-        .position(new Point2D(BOX_WIDTH - MAX_RADIUS, BOX_HEIGHT - MAX_RADIUS))
+        .position(new Point2D(BOX_WIDTH, BOX_HEIGHT))
         .build();
 
     final List<Particle> initialPedestriansList =
@@ -54,7 +54,7 @@ public class PedestrianMain {
     Simulator simulator = new PedestrianSimulator(initialPedestrians, DT, WRITER_ITERATIONS,
         BOX_WIDTH, BOX_HEIGHT, GAP, MAX_RADIUS, MIN_RADIUS, MAX_V, BETA, TAO);
 
-    simulator.simulate(new TimeCriteria(20), writer);
+    simulator.simulate(new TimeCriteria(100), writer);
   }
 
 }
