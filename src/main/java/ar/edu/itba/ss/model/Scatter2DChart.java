@@ -9,6 +9,7 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.ScatterChart;
 import javafx.scene.chart.XYChart.Data;
 import javafx.scene.chart.XYChart.Series;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 public class Scatter2DChart extends Application {
@@ -42,7 +43,7 @@ public class Scatter2DChart extends Application {
   }
 
   public static void addSeries(final String name, final List<Point2D> points) {
-    final Series<Number, Number> series = new Series();
+    final Series<Number, Number> series = new Series<>();
 
     series.setName(Objects.requireNonNull(name));
     for (final Point2D point : points) {
@@ -51,11 +52,18 @@ public class Scatter2DChart extends Application {
     Scatter2DChart.chart.getData().add(series);
   }
 
+  public static void removeFirstSeries() {
+    Scatter2DChart.chart.getData().remove(0);
+  }
+
   @Override
   public void start(final Stage primaryStage) throws Exception {
-    Scatter2DChart.chart = new ScatterChart<>(
-        new NumberAxis(xLabel, xMin, xMax, xStep),
-        new NumberAxis(yLabel, yMin, yMax, yStep));
+    final NumberAxis xAxis = new NumberAxis();
+    final NumberAxis yAxis = new NumberAxis();
+    xAxis.tickLabelFontProperty().set(Font.font(14));
+    yAxis.tickLabelFontProperty().set(Font.font(14));
+
+    Scatter2DChart.chart = new ScatterChart<>(xAxis, yAxis);
     Scatter2DChart.chart.setTitle(Objects.requireNonNull(name));
     Scatter2DChart.chart.setPrefSize(500, 400); // TODO
     primaryStage.setTitle(chart.getTitle());

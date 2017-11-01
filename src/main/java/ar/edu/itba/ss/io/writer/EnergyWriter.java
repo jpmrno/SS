@@ -5,6 +5,7 @@ import static java.lang.Math.pow;
 import ar.edu.itba.ss.model.Neighbour;
 import ar.edu.itba.ss.model.Particle;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -13,9 +14,9 @@ import javafx.geometry.Point2D;
 
 public class EnergyWriter implements ParticlesWriter {
 
-  private List<Point2D> points;
   private final double epsilon;
   private final double rm;
+  private List<Point2D> points;
 
   public EnergyWriter(double epsilon, double rm) {
     this.epsilon = epsilon;
@@ -24,7 +25,7 @@ public class EnergyWriter implements ParticlesWriter {
   }
 
   @Override
-  public void write(double time, List<Particle> particles) throws IOException {
+  public void write(double time, Collection<Particle> particles) throws IOException {
     // Ignore
   }
 

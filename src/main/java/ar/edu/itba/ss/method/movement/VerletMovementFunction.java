@@ -1,4 +1,4 @@
-package ar.edu.itba.ss.method;
+package ar.edu.itba.ss.method.movement;
 
 import static java.util.Objects.requireNonNull;
 
@@ -42,5 +42,10 @@ public class VerletMovementFunction implements MovementFunction {
         .position(predictedPosition)
         .velocity(predictedVelocity)
         .build();
+  }
+
+  @Override
+  public void clearState(Particle particle) {
+    previousPosition = particle.position();
   }
 }

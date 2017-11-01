@@ -1,4 +1,4 @@
-package ar.edu.itba.ss.method;
+package ar.edu.itba.ss.method.movement;
 
 import static java.util.Objects.requireNonNull;
 
@@ -9,12 +9,12 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import javafx.geometry.Point2D;
 
-public class BeemanMovementFunction implements MovementFunction {
+public class VDBeemanMovementFunction implements MovementFunction {
 
   private final BiFunction<Particle, Set<Neighbour>, Point2D> forceFunction;
   private Point2D previousAcceleration;
 
-  public BeemanMovementFunction(final BiFunction<Particle, Set<Neighbour>, Point2D> forceFunction,
+  public VDBeemanMovementFunction(final BiFunction<Particle, Set<Neighbour>, Point2D> forceFunction,
       final Point2D previousAcceleration) {
 
     this.forceFunction = requireNonNull(forceFunction);
@@ -36,15 +36,22 @@ public class BeemanMovementFunction implements MovementFunction {
         .subtract(previousAcceleration
             .multiply(dt * dt / 6.0));
 
+    final Point2D predictedVelocity = currentParticle.velocity()
+        .add(currentAcceleration
+            .multiply(dt * 3.0 / 2.0))
+        .subtract(previousAcceleration
+            .multiply(dt / 2.0));
+
     final Particle predictedParticle = ImmutableParticle.builder()
         .from(currentParticle)
         .position(predictedPosition)
+        .velocity(predictedVelocity)
         .build();
 
     final Point2D predictedAcceleration = forceFunction.apply(predictedParticle, neighbours)
         .multiply(1.0 / predictedParticle.mass());
 
-    final Point2D predictedVelocity = currentParticle.velocity()
+    final Point2D correctedVelocity = currentParticle.velocity()
         .add(predictedAcceleration
             .multiply(dt / 3.0))
         .add(currentAcceleration
@@ -55,9 +62,8 @@ public class BeemanMovementFunction implements MovementFunction {
     previousAcceleration = currentAcceleration;
 
     return ImmutableParticle.builder()
-        .from(currentParticle)
-        .position(predictedPosition)
-        .velocity(predictedVelocity)
+        .from(predictedParticle)
+        .velocity(correctedVelocity)
         .build();
   }
 }
