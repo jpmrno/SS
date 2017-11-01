@@ -2,6 +2,7 @@ package ar.edu.itba.ss.method.neigbour;
 
 import ar.edu.itba.ss.model.Neighbour;
 import ar.edu.itba.ss.model.Particle;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -12,7 +13,7 @@ import javafx.geometry.Point2D;
 public class BruteForceMethod implements NeighbourFindingMethod {
 
   @Override
-  public Map<Particle, Set<Neighbour>> apply(final List<Particle> particles,
+  public Map<Particle, Set<Neighbour>> apply(final Collection<Particle> particles,
       final double rc) {
     if (rc <= 0) {
       throw new IllegalArgumentException("Cutoff distance has to be positive.");

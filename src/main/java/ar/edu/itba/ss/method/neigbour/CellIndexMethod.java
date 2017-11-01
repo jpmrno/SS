@@ -2,14 +2,9 @@ package ar.edu.itba.ss.method.neigbour;
 
 import ar.edu.itba.ss.model.Neighbour;
 import ar.edu.itba.ss.model.Particle;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+
+import java.util.*;
+
 import javafx.geometry.Point2D;
 
 public class CellIndexMethod implements NeighbourFindingMethod {
@@ -34,7 +29,7 @@ public class CellIndexMethod implements NeighbourFindingMethod {
     this.periodic = periodic;
   }
 
-  public Map<Particle, Set<Neighbour>> apply(final List<Particle> particles, final double maxRadius,
+  public Map<Particle, Set<Neighbour>> apply(final Collection<Particle> particles, final double maxRadius,
       final double rc) {
 
     if (maxRadius < 0) {
@@ -67,7 +62,7 @@ public class CellIndexMethod implements NeighbourFindingMethod {
   }
 
   @Override
-  public Map<Particle, Set<Neighbour>> apply(final List<Particle> particles, final double rc) {
+  public Map<Particle, Set<Neighbour>> apply(final Collection<Particle> particles, final double rc) {
 
     final Optional<Particle> maxParticle = particles.stream().parallel()
         .max(Comparator.comparingDouble(Particle::radius));
@@ -78,7 +73,7 @@ public class CellIndexMethod implements NeighbourFindingMethod {
     return apply(particles, maxParticle.get().radius(), rc);
   }
 
-  private List<Particle>[][] createMatrix(final List<Particle> particles) {
+  private List<Particle>[][] createMatrix(final Collection<Particle> particles) {
     final List<Particle>[][] matrix = new List[m][m];
 
     for (final Particle particle : particles) {
