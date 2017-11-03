@@ -1,24 +1,23 @@
 package ar.edu.itba.ss.simulator;
 
+import static java.lang.Math.pow;
+
 import ar.edu.itba.ss.io.writer.ParticlesWriter;
 import ar.edu.itba.ss.method.neigbour.CellIndexMethod;
 import ar.edu.itba.ss.model.ImmutableParticle;
 import ar.edu.itba.ss.model.Neighbour;
 import ar.edu.itba.ss.model.Particle;
+import ar.edu.itba.ss.model.Points;
 import ar.edu.itba.ss.model.criteria.Criteria;
 import java.io.IOException;
 import java.util.HashSet;
-import javafx.geometry.Point2D;
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javafx.geometry.Point2D;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.max;
-import static java.lang.Math.pow;
-
+@SuppressWarnings("Duplicates")
 public class PedestrianSimulator implements Simulator {
 
   private final Set<Particle> initialPedestrians;
@@ -64,8 +63,7 @@ public class PedestrianSimulator implements Simulator {
     double time = 0;
 
     while (!endCriteria.test(time, currentPedestrians)) {
-      final Map<Particle, Set<Neighbour>> neighbours =
-          cim.apply(currentPedestrians, maxRadius, maxRadius);
+      final Map<Particle, Set<Neighbour>> neighbours = cim.apply(currentPedestrians, maxRadius, 0);
       currentPedestrians = movePedestrians(neighbours);
 
       if (iteration == writerIteration) {
@@ -89,8 +87,8 @@ public class PedestrianSimulator implements Simulator {
 
     for (final Map.Entry<Particle, Set<Neighbour>> entry : neighbours.entrySet()) {
       final Particle movedPedestrian;
+
       addWallParticles(entry.getKey(), entry.getValue());
-      entry.getValue().stream().filter(n -> !n.getNeighbourParticle().collides(entry.getKey()));
 
       if (entry.getValue().size() == 0) {
         movedPedestrian = movePedestrian(entry.getKey());
@@ -98,7 +96,7 @@ public class PedestrianSimulator implements Simulator {
         movedPedestrian = movePedestrian(entry.getKey(), entry.getValue());
       }
 
-      if(movedPedestrian.position().getX() < finalDestination.getX()){
+      if (movedPedestrian.position().getX() < finalDestination.getX()) {
         nextPedestrians.add(movedPedestrian);
       }
     }
@@ -107,23 +105,23 @@ public class PedestrianSimulator implements Simulator {
   }
 
   private Particle movePedestrian(final Particle pedestrian) {
-    final double velocityMagnitude =
+    final double vd =
         vdMax * pow((pedestrian.radius() - minRadius) / (maxRadius - minRadius), beta);
-    final Point2D target = target(pedestrian);
-    final Point2D newVelocity = target.subtract(pedestrian.position())
-        .normalize().multiply(velocityMagnitude);
-//    System.out.println(newVelocity);
+    final Point2D newVelocity = target(pedestrian)
+        .subtract(pedestrian.position())
+        .normalize()
+        .multiply(vd);
 
-    final double newX = pedestrian.position().getX() + newVelocity.getX() * dt;
-    final double newY = pedestrian.position().getY() + newVelocity.getY() * dt;
+    // TODO: Preguntar si es newVelocity o la actual
+    final Point2D newPosition = Points.linearMotion(pedestrian.position(), newVelocity, dt);
 
     double newRadius = pedestrian.radius() + maxRadius / (tao / dt);
-    if(newRadius > maxRadius){
+    if (newRadius > maxRadius) {
       newRadius = maxRadius;
     }
 
     return ImmutableParticle.builder().from(pedestrian)
-        .position(new Point2D(newX, newY))
+        .position(newPosition)
         .velocity(newVelocity)
         .radius(newRadius)
         .build();
@@ -131,15 +129,17 @@ public class PedestrianSimulator implements Simulator {
 
   private Particle movePedestrian(final Particle pedestrian, final Set<Neighbour> neighbours) {
     Point2D normalUnitVector = Point2D.ZERO;
-
-    for(Neighbour neighbour : neighbours){
-      normalUnitVector = normalUnitVector.add(pedestrian.position().subtract(neighbour.getNeighbourParticle().position()));
+    for (final Neighbour neighbour : neighbours) {
+      normalUnitVector = normalUnitVector
+          .add(pedestrian.position()
+              .subtract(neighbour.getNeighbourParticle().position()));
     }
-    normalUnitVector = normalUnitVector.normalize();
-//    System.out.println(normalUnitVector);
+    final Point2D newVelocity = normalUnitVector
+        .normalize()
+        .multiply(vdMax);
 
-    final Point2D newVelocity = normalUnitVector.multiply(vdMax);
-    final Point2D newPosition = pedestrian.position().add(newVelocity.multiply(dt));
+    // TODO: Preguntar si es newVelocity o la actual
+    final Point2D newPosition = Points.linearMotion(pedestrian.position(), newVelocity, dt);
 
     return ImmutableParticle.builder().from(pedestrian)
         .radius(minRadius)
@@ -149,7 +149,7 @@ public class PedestrianSimulator implements Simulator {
   }
 
   private Point2D target(final Particle pedestrian) {
-    if (isOutOfBox(pedestrian)) {
+    if (pedestrian.position().getX() >= boxWidth) {
       return finalDestination;
     }
 
@@ -165,10 +165,6 @@ public class PedestrianSimulator implements Simulator {
     }
 
     return new Point2D(boxWidth, pedestrian.position().getY());
-  }
-
-  private boolean isOutOfBox(final Particle pedestrian) {
-    return pedestrian.position().getX() >= boxWidth; // TODO: Test
   }
 
   private void addWallParticles(final Particle particle, final Set<Neighbour> neighbours) {
@@ -255,6 +251,4 @@ public class PedestrianSimulator implements Simulator {
       }
     }
   }
-
-
 }

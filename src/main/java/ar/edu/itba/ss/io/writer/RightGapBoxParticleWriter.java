@@ -8,19 +8,18 @@ import java.util.LinkedList;
 import java.util.List;
 import javafx.geometry.Point2D;
 
-public class VerticalGapBoxParticleWritter extends AppendFileParticlesWriter {
+public class RightGapBoxParticleWriter extends AppendFileParticlesWriter {
 
   private static final double OVITO_PARTICLES_RADIUS = 0;
   private static final double OVITO_PARTICLES_MASS = Double.POSITIVE_INFINITY;
 
   private final List<Particle> boxParticles;
 
-  public VerticalGapBoxParticleWritter(final String fileName, final double boxWidth,
-      final double boxHeight,
-      final double boxMiddleGap) {
+  public RightGapBoxParticleWriter(final String fileName, final Point2D boxStart,
+      final Point2D boxEnd, final double boxRightGap) {
     super(fileName);
 
-    boxParticles = boxParticles(boxWidth, boxHeight, boxMiddleGap);
+    boxParticles = boxParticles(boxStart, boxEnd, boxRightGap);
   }
 
   @Override
@@ -30,63 +29,65 @@ public class VerticalGapBoxParticleWritter extends AppendFileParticlesWriter {
     super.write(time, particlesToWrite);
   }
 
-  private List<Particle> boxParticles(final double boxWidth, final double boxHeight,
+  private List<Particle> boxParticles(final Point2D boxStart, final Point2D boxEnd,
       final double boxMiddleGap) {
 
     int id = -1;
     final List<Particle> boxParticles = new LinkedList<>();
 
     boxParticles.add(ImmutableParticle.builder()
-        .position(Point2D.ZERO)
+        .position(boxStart)
         .velocity(Point2D.ZERO)
         .id(id--)
         .radius(OVITO_PARTICLES_RADIUS)
         .mass(OVITO_PARTICLES_MASS)
         .build());
     boxParticles.add(ImmutableParticle.builder()
-        .position(new Point2D(0, boxHeight))
+        .position(new Point2D(boxStart.getX(), boxEnd.getY()))
         .velocity(Point2D.ZERO)
         .id(id--)
         .radius(OVITO_PARTICLES_RADIUS)
         .mass(OVITO_PARTICLES_MASS)
         .build());
     boxParticles.add(ImmutableParticle.builder()
-        .position(new Point2D(boxWidth, 0))
+        .position(boxEnd)
         .velocity(Point2D.ZERO)
         .id(id--)
         .radius(OVITO_PARTICLES_RADIUS)
         .mass(OVITO_PARTICLES_MASS)
         .build());
     boxParticles.add(ImmutableParticle.builder()
-        .position(new Point2D(boxWidth, boxHeight))
+        .position(new Point2D(boxEnd.getX(), boxStart.getY()))
         .velocity(Point2D.ZERO)
         .id(id--)
         .radius(OVITO_PARTICLES_RADIUS)
         .mass(OVITO_PARTICLES_MASS)
         .build());
     boxParticles.add(ImmutableParticle.builder()
-        .position(new Point2D(boxWidth / 2, 0))
+        .position(
+            new Point2D((boxEnd.getX() - boxStart.getX()) / 2 - boxMiddleGap / 2, boxStart.getY()))
         .velocity(Point2D.ZERO)
         .id(id--)
         .radius(OVITO_PARTICLES_RADIUS)
         .mass(OVITO_PARTICLES_MASS)
         .build());
     boxParticles.add(ImmutableParticle.builder()
-        .position(new Point2D(boxWidth / 2, boxHeight / 2 - boxMiddleGap / 2))
+        .position(
+            new Point2D((boxEnd.getX() - boxStart.getX()) / 2 + boxMiddleGap / 2, boxStart.getY()))
         .velocity(Point2D.ZERO)
         .id(id--)
         .radius(OVITO_PARTICLES_RADIUS)
         .mass(OVITO_PARTICLES_MASS)
         .build());
     boxParticles.add(ImmutableParticle.builder()
-        .position(new Point2D(boxWidth / 2, boxHeight / 2 + boxMiddleGap / 2))
+        .position(new Point2D(0, 0))
         .velocity(Point2D.ZERO)
         .id(id--)
         .radius(OVITO_PARTICLES_RADIUS)
         .mass(OVITO_PARTICLES_MASS)
         .build());
     boxParticles.add(ImmutableParticle.builder()
-        .position(new Point2D(boxWidth / 2, boxHeight))
+        .position(new Point2D(boxEnd.getX(), 0))
         .velocity(Point2D.ZERO)
         .id(id--)
         .radius(OVITO_PARTICLES_RADIUS)
