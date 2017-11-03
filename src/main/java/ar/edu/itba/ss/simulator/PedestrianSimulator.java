@@ -10,6 +10,7 @@ import ar.edu.itba.ss.model.Particle;
 import ar.edu.itba.ss.model.Points;
 import ar.edu.itba.ss.model.criteria.Criteria;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -33,7 +34,6 @@ public class PedestrianSimulator implements Simulator {
   private final double beta;
   private final double tao;
   private final List<Double> exitTimes;
-  private int currentTimeExits = 0;
   private final Point2D finalDestination;
 
   public PedestrianSimulator(Set<Particle> initialPedestrians, double dt, int writerIteration,
@@ -60,11 +60,11 @@ public class PedestrianSimulator implements Simulator {
   public Set<Particle> simulate(Criteria endCriteria, ParticlesWriter writer) {
     Set<Particle> currentPedestrians = initialPedestrians;
     int iteration = 1;
-    double time = 0;
+    double time = dt;
 
     while (!endCriteria.test(time, currentPedestrians)) {
       final Map<Particle, Set<Neighbour>> neighbours = cim.apply(currentPedestrians, maxRadius, 0);
-      currentPedestrians = movePedestrians(neighbours);
+      currentPedestrians = movePedestrians(neighbours, time);
 
       if (iteration == writerIteration) {
         iteration = 0;
@@ -82,7 +82,8 @@ public class PedestrianSimulator implements Simulator {
     return currentPedestrians;
   }
 
-  private Set<Particle> movePedestrians(final Map<Particle, Set<Neighbour>> neighbours) {
+  private Set<Particle> movePedestrians(final Map<Particle, Set<Neighbour>> neighbours,
+      final double time) {
     final Set<Particle> nextPedestrians = new HashSet<>(neighbours.size());
 
     for (final Map.Entry<Particle, Set<Neighbour>> entry : neighbours.entrySet()) {
@@ -98,6 +99,8 @@ public class PedestrianSimulator implements Simulator {
 
       if (movedPedestrian.position().getX() < finalDestination.getX()) {
         nextPedestrians.add(movedPedestrian);
+      } else {
+        exitTimes.add(time);
       }
     }
 
@@ -250,5 +253,9 @@ public class PedestrianSimulator implements Simulator {
             .build(), distanceToWall));
       }
     }
+  }
+
+  public List<Double> getExitTimes() {
+    return Collections.unmodifiableList(exitTimes);
   }
 }
