@@ -10,12 +10,12 @@ import ar.edu.itba.ss.model.Particle;
 import ar.edu.itba.ss.model.Points;
 import ar.edu.itba.ss.model.criteria.Criteria;
 import java.io.IOException;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javafx.geometry.Point2D;
 
 @SuppressWarnings("Duplicates")
@@ -33,7 +33,7 @@ public class PedestrianSimulator implements Simulator {
   private final double vdMax;
   private final double beta;
   private final double tao;
-  private final List<Double> exitTimes;
+  private final Map<Particle, Double> exitTimes;
   private final Point2D finalDestination;
 
   public PedestrianSimulator(Set<Particle> initialPedestrians, double dt, int writerIteration,
@@ -50,7 +50,7 @@ public class PedestrianSimulator implements Simulator {
     this.vdMax = vdMax;
     this.beta = beta;
     this.tao = tao;
-    this.exitTimes = new LinkedList<>();
+    this.exitTimes = new HashMap<>();
     this.finalDestination = new Point2D(1.1 * boxWidth, boxHeight / 2);
     this.cim = new CellIndexMethod(
         finalDestination.getX() > boxHeight ? finalDestination.getX() : boxHeight, false);
@@ -99,8 +99,11 @@ public class PedestrianSimulator implements Simulator {
 
       if (movedPedestrian.position().getX() < finalDestination.getX()) {
         nextPedestrians.add(movedPedestrian);
-      } else {
-        exitTimes.add(time);
+
+        if (entry.getKey().position().getX() <= boxWidth
+            && movedPedestrian.position().getX() > boxWidth) {
+          exitTimes.put(movedPedestrian, time);
+        }
       }
     }
 
@@ -153,7 +156,7 @@ public class PedestrianSimulator implements Simulator {
 
   private Point2D target(final Particle pedestrian) {
     if (pedestrian.position().getX() >= boxWidth) {
-      return finalDestination;
+      return new Point2D(finalDestination.getX(), pedestrian.position().getY());
     }
 
     final double gapStart = boxHeight / 2 - gap / 2;
@@ -256,6 +259,6 @@ public class PedestrianSimulator implements Simulator {
   }
 
   public List<Double> getExitTimes() {
-    return Collections.unmodifiableList(exitTimes);
+    return exitTimes.values().stream().sorted().collect(Collectors.toList());
   }
 }
