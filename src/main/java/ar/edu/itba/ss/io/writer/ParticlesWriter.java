@@ -13,8 +13,7 @@ public interface ParticlesWriter {
   void write(final double time, final Collection<Particle> particles) throws IOException;
 
   default void write(final double time, final Collection<Particle> particles,
-      final Collision collision)
-      throws IOException {
+      final Collision collision) throws IOException {
     write(time, particles);
   }
 
