@@ -26,11 +26,11 @@ public class AppendFileParticlesWriter implements ParticlesWriter {
 
   @Override
   public void write(final double time, final Collection<Particle> particles) throws IOException {
-    ParticlesXYZFiles.append(filePath, time, particles);
+//    ParticlesXYZFiles.append(filePath, time, particles);
   }
 
   public void writeWithAttributes(final double time, final Map<Particle, List<Double>> map)
       throws IOException {
-    ParticlesXYZFiles.appendWithOtherAttributes(filePath, time, map);
+//    ParticlesXYZFiles.appendWithOtherAttributes(filePath, time, map);
   }
 }

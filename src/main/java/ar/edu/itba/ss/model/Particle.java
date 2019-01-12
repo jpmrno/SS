@@ -1,34 +1,31 @@
 package ar.edu.itba.ss.model;
 
-import javafx.geometry.Point2D;
 import org.immutables.value.Value;
 
 @Value.Immutable
-public interface Particle {
+public abstract class Particle {
 
-  int id();
+  public abstract int id();
+
+  public abstract int row();
+
+  public abstract int col();
+
+  public abstract int velocity();
 
   @Value.Default
-  default double radius() {
-    return 0;
-  }
-
-  @Value.Auxiliary
-  Point2D position();
-
-  @Value.Auxiliary
-  @Value.Default
-  default double mass() {
+  public int length() {
     return 1;
   }
 
-  @Value.Auxiliary
-  @Value.Default
-  default Point2D velocity() {
-    return Point2D.ZERO;
+  public static Builder builder() {
+    return new Particle.Builder();
   }
 
-  default boolean collides(final Particle other) {
-    return this.position().distance(other.position()) - this.radius() - other.radius() < 0;
+  public static class Builder extends ImmutableParticle.Builder {
+
+    public final Particle.Builder position(final int row, final int col) {
+      return row(row).col(col);
+    }
   }
 }
