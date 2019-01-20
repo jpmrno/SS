@@ -11,7 +11,10 @@ public abstract class Particle {
 
   public abstract int col();
 
-  public abstract int velocity();
+  @Value.Default
+  public int velocity() {
+    return 1;
+  }
 
   @Value.Default
   public int length() {

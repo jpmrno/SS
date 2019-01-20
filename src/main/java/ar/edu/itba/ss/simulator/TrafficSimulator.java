@@ -1,12 +1,18 @@
 package ar.edu.itba.ss.simulator;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import ar.edu.itba.ss.io.writer.ParticlesWriter;
 import ar.edu.itba.ss.model.Particle;
 import ar.edu.itba.ss.model.ParticleWrapper;
 import ar.edu.itba.ss.model.criteria.Criteria;
 import ar.edu.itba.ss.util.Either;
+import java.io.IOException;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.OptionalInt;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
@@ -15,74 +21,167 @@ import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 
 public class TrafficSimulator implements Simulator {
 
-  private static final Random random = ThreadLocalRandom.current();
+  private static final Random RANDOM = ThreadLocalRandom.current();
 
   private static final double CELL_LENGTH = 2.5;
-  private static final int[] VEHICLES = new int[]{1};
-  private static final double[] VEHICLES_PROBABILITY = new double[]{1};
+  private static final int[] VEHICLES = new int[]{1, 2, 3, 5};
+  private static final double[] VEHICLES_PROBABILITY = new double[]{0.1, 0.7, 0.15, 0.05};
   private static final EnumeratedIntegerDistribution vehiclesDistribution =
       new EnumeratedIntegerDistribution(VEHICLES, VEHICLES_PROBABILITY);
 
-  private final int nVehicles;
-  private final Either<Particle, ParticleWrapper>[][] road;
+  private static int LAST_ID = 0;
+
+  private final Either<Particle, ParticleWrapper>[][] roads;
   private final int vMax;
+  private final double slowDownProbability;
   private Set<Particle> initParticles;
 
-  public TrafficSimulator(final int nVehicles, final int lanes, final int length, final int vMax) {
-    this.nVehicles = nVehicles;
-    this.road = new Either[lanes][length];
+  public TrafficSimulator(final int nVehicles, final int lanes, final int length, final int vMax,
+      final double slowDownProbability) {
+    this.roads = new Either[lanes][length];
     this.vMax = vMax;
-    this.initParticles = new HashSet<>();
-
-    fillParticles(initParticles, road, nVehicles, lanes, length, vMax);
+    this.slowDownProbability = slowDownProbability;
+    this.initParticles = buildParticles(roads, generateParticles(roads, nVehicles), vMax);
   }
 
   @Override
   public Set<Particle> simulate(final Criteria endCriteria, final ParticlesWriter writer) {
-    return null;
+    Set<Particle> currentParticles = initParticles;
+    long iteration = 0;
+    try {
+      writer.write(iteration, roads, currentParticles);
+    } catch (IOException e) {
+      e.printStackTrace();
+      System.exit(1);
+    }
+    while (!endCriteria.test(iteration++, currentParticles)) {
+      final Set<Particle> iterationParticles = new HashSet<>();
+      for (final Particle particle : currentParticles) {
+        final OptionalInt distance = distanceToNextParticle(roads, particle);
+        final int newVelocity = velocity(particle, distance.orElse(Integer.MAX_VALUE));
+        final int[] newPosition = movement(particle, newVelocity);
+        iterationParticles.add(Particle.builder().from(particle)
+            .velocity(newVelocity)
+            .position(newPosition[0], newPosition[1])
+            .build());
+      }
+      updateRoads(roads, currentParticles, iterationParticles);
+      currentParticles = iterationParticles;
+      try {
+        writer.write(iteration, roads, currentParticles);
+      } catch (IOException e) {
+        e.printStackTrace();
+        System.exit(1);
+      }
+    }
+    return currentParticles;
   }
 
-  private void fillParticles(final Set<Particle> initParticles, final Either<Particle, ParticleWrapper>[][] road,
-      final int nVehicles, final int lanes, final int length, final int vMax) {
-    int vehicles = 0;
-    while (vehicles != nVehicles) {
-      final int row = random.nextInt(lanes);
-      final int col = random.nextInt(length);
-      if (road[row][col] == null) {
-        vehicles++;
-        final Particle particle = Particle.builder()
-            .position(row, col)
-            .velocity(random.nextInt(vMax + 1))
-            .build();
-        road[row][col] = Either.value(particle);
-        initParticles.add(particle);
+  private void updateRoads(final Either<Particle, ParticleWrapper>[][] roads, final Set<Particle> oldVehicles,
+      final Set<Particle> newVehicles) {
+    for (final Particle oldVehicle : oldVehicles) {
+      deleteVehicle(oldVehicle, roads);
+    }
+    final Iterator<Particle> it = newVehicles.iterator();
+    while (it.hasNext()) {
+      final Particle newVehicle = it.next();
+      if (isValidPosition(roads, newVehicle)) {
+        addVehicle(newVehicle, roads);
+      } else {
+        it.remove();
+        // TODO: generate new vehicle
       }
     }
   }
 
-  private Set<Particle> setVehicleTypes(final Set<Particle> initParticles, final Either<Particle, ParticleWrapper>[][] road) {
+  private void deleteVehicle(final Particle vehicle, final Either<Particle, ParticleWrapper>[][] roads) {
+    for (int i = vehicle.col(); i < roads[0].length && i < vehicle.col() + vehicle.length(); i++) {
+      roads[vehicle.row()][i] = null;
+    }
+  }
+
+  private void addVehicle(final Particle vehicle, final Either<Particle, ParticleWrapper>[][] roads) {
+    final ParticleWrapper particleWrapper = ParticleWrapper.of(vehicle);
+    if (roads[vehicle.row()][vehicle.col()] != null) {
+      throw new IllegalStateException();
+    }
+    roads[vehicle.row()][vehicle.col()] = Either.value(vehicle);
+    for (int i = vehicle.col() + 1; i < roads[0].length && i < vehicle.col() + vehicle.length(); i++) {
+      if (roads[vehicle.row()][i] != null) {
+        throw new IllegalStateException();
+      }
+      roads[vehicle.row()][i] = Either.alternative(particleWrapper);
+    }
+  }
+
+  private Set<Particle> generateParticles(final Either<Particle, ParticleWrapper>[][] road,
+      final int nVehicles) {
     final Set<Particle> particles = new HashSet<>();
-    for (final Particle particle : initParticles) {
-      int length = getRandomVehicleLength();
-      if (isValidPosition(road, particle, length)) {
-        setParticleWithLength(road, particles, particle, length);
+    int vehicles = 0;
+    while (vehicles != nVehicles) {
+      final int row = RANDOM.nextInt(road.length);
+      final int col = RANDOM.nextInt(road[0].length);
+      if (road[row][col] == null) {
+        vehicles++;
+        final Particle particle = Particle.builder()
+            .id(++LAST_ID)
+            .position(row, col)
+            .build();
+        particles.add(particle);
+        road[row][col] = Either.value(particle);
       }
     }
     return particles;
   }
 
-  private void setParticleWithLength(final Either<Particle, ParticleWrapper>[][] road, final Set<Particle> particles,
-      final Particle particle, final int length) {
-    final Particle particleWithLength = Particle.builder().from(particle).length(length).build();
-    road[particle.row()][particle.col()] = Either.value(particleWithLength);
-    particles.add(particleWithLength);
-    for (int nextCol = particle.col() + 1; nextCol < particle.col() + length; nextCol++) {
-      road[particle.row()][nextCol] = Either.alternative(ParticleWrapper.of(particleWithLength));
+  private Set<Particle> buildParticles(final Either<Particle, ParticleWrapper>[][] road,
+      final Set<Particle> particles, final int vMax) {
+    final Set<Particle> newParticles = new HashSet<>();
+    for (final Particle particle : particles) {
+      int length = getRandomVehicleLength();
+      if (isValidPosition(road, particle, length)) {
+        newParticles.add(updateParticleWithProperties(road, particle, length, vMax));
+      } else {
+        final int[] lengths = previousLengths(length);
+        for (final int otherLength : lengths) {
+          if (isValidPosition(road, particle, length)) {
+            newParticles.add(updateParticleWithProperties(road, particle, otherLength, vMax));
+            break;
+          }
+        }
+      }
     }
+    return newParticles;
+  }
+
+  private Particle updateParticleWithProperties(final Either<Particle, ParticleWrapper>[][] roads,
+      final Particle particle, final int length, final int vMax) {
+    final OptionalInt distance = distanceToNextParticle(roads, particle);
+    final Particle newParticle = Particle.builder().from(particle)
+        .velocity(RANDOM.nextInt(min(vMax, distance.orElse(Integer.MAX_VALUE) - length) + 1))
+        .length(length)
+        .build();
+    roads[particle.row()][particle.col()] = Either.value(newParticle);
+    for (int nextCol = particle.col() + 1; nextCol < particle.col() + length; nextCol++) {
+      roads[particle.row()][nextCol] = Either.alternative(ParticleWrapper.of(newParticle));
+    }
+    return newParticle;
   }
 
   private static int getRandomVehicleLength() {
     return vehiclesDistribution.sample();
+  }
+
+  private boolean isValidPosition(final Either<Particle, ParticleWrapper>[][] road, final int row, final int col) {
+    return row >= 0 && col >= 0 && row < road.length && col < road[row].length;
+  }
+
+  private boolean isValidPosition(final Either<Particle, ParticleWrapper>[][] road, final int[] position) {
+    return isValidPosition(road, position[0], position[1]);
+  }
+
+  private boolean isValidPosition(final Either<Particle, ParticleWrapper>[][] road, final Particle particle) {
+    return isValidPosition(road, particle.row(), particle.col());
   }
 
   private boolean isValidPosition(final Either<Particle, ParticleWrapper>[][] road, final Particle particle,
@@ -106,5 +205,34 @@ public class TrafficSimulator implements Simulator {
         .filter(l -> l < lastLength)
         .mapToInt(i -> i)
         .toArray();
+  }
+
+  private int velocity(final Particle particle, final int distance) {
+    int velocity = min(particle.velocity() + 1, vMax);
+    velocity = min(distance - 1, velocity);
+    if (RANDOM.nextDouble() <= slowDownProbability) {
+      velocity = max(0, velocity - 1);
+    }
+    return velocity;
+  }
+
+  private int[] movement(final Particle particle, final int velocity) {
+    return new int[]{particle.row(), particle.col() + velocity};
+  }
+
+  private OptionalInt distanceToNextParticle(final Either<Particle, ParticleWrapper>[][] road,
+      final Particle particle) {
+    final int row = particle.row();
+    final int col = particle.col();
+    final int length = particle.length();
+    for (int i = col + length; i < road[row].length; i++) {
+      if (road[row][i] != null) {
+        if (!road[row][i].isValuePresent()) {
+          throw new IllegalStateException();
+        }
+        return OptionalInt.of(i - col - length + 1);
+      }
+    }
+    return OptionalInt.empty();
   }
 }
