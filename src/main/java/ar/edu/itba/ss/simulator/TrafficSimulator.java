@@ -4,6 +4,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import ar.edu.itba.ss.io.writer.ParticlesWriter;
+import ar.edu.itba.ss.model.ImmutableParticle;
 import ar.edu.itba.ss.model.Particle;
 import ar.edu.itba.ss.model.ParticleWrapper;
 import ar.edu.itba.ss.model.criteria.Criteria;
@@ -19,6 +20,7 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
+import com.sun.tools.internal.xjc.reader.xmlschema.ParticleBinder;
 import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 
 public class TrafficSimulator implements Simulator {
@@ -59,11 +61,28 @@ public class TrafficSimulator implements Simulator {
       System.exit(1);
     }
     while (!endCriteria.test(iteration++, currentParticles)) {
+      // change lanes
       final Set<Particle> iterationParticles = new HashSet<>();
+      for (final Particle particle : currentParticles) {
+        final Particle newParticle = laneChange(particle, roads, vMax, particle.velocity());
+        if (newParticle != null) {
+          iterationParticles.add(newParticle);
+          deleteVehicle(particle, roads);
+          addVehicle(newParticle, roads);
+        } else {
+          iterationParticles.add(particle);
+        }
+      }
+
+      currentParticles.clear();
+      currentParticles.addAll(iterationParticles);
+      iterationParticles.clear();
+
+      // perform NaSch rules
       for (final Particle particle : currentParticles) {
         final OptionalInt distance = distanceToNextParticle(roads, particle);
         final int newVelocity = velocity(particle, distance.orElse(Integer.MAX_VALUE));
-        final int[] newPosition = movement(particle, newVelocity);
+        final int[] newPosition = moveForward(particle, newVelocity, roads);
         iterationParticles.add(Particle.builder().from(particle)
                 .velocity(newVelocity)
                 .position(newPosition[0], newPosition[1])
@@ -107,12 +126,12 @@ public class TrafficSimulator implements Simulator {
   private void addVehicle(final Particle vehicle, final Either<Particle, ParticleWrapper>[][] roads) {
     final ParticleWrapper particleWrapper = ParticleWrapper.of(vehicle);
     if (roads[vehicle.row()][vehicle.col()] != null) {
-      throw new IllegalStateException();
+      throw new IllegalStateException("Crash at: " + vehicle.row() + " - " + vehicle.col());
     }
     roads[vehicle.row()][vehicle.col()] = Either.value(vehicle);
     for (int i = vehicle.col() + 1; i < roads[0].length && i < vehicle.col() + vehicle.length(); i++) {
       if (roads[vehicle.row()][i] != null) {
-        throw new IllegalStateException();
+        throw new IllegalStateException("Crash at: " + vehicle.row() + " - " + i);
       }
       roads[vehicle.row()][i] = Either.alternative(particleWrapper);
     }
@@ -180,10 +199,6 @@ public class TrafficSimulator implements Simulator {
     return row >= 0 && col >= 0 && row < road.length && col < road[row].length;
   }
 
-  private boolean isValidPosition(final Either<Particle, ParticleWrapper>[][] road, final int[] position) {
-    return isInsideRoad(road, position[0], position[1]);
-  }
-
   private boolean isInsideRoad(final Either<Particle, ParticleWrapper>[][] road, final Particle particle) {
     return isInsideRoad(road, particle.row(), particle.col());
   }
@@ -220,8 +235,38 @@ public class TrafficSimulator implements Simulator {
     return velocity;
   }
 
-  private int[] movement(final Particle particle, final int velocity) {
+  // me parece que ya no es necesario que devuelva int[]
+  private int[] moveForward(final Particle particle, final int velocity, final Either<Particle, ParticleWrapper>[][] roads) {
     return new int[]{particle.row(), particle.col() + velocity};
+  }
+
+  private Particle laneChange(final Particle particle, final Either<Particle, ParticleWrapper>[][] roads,
+                              final int precedingGap, final int successiveGap) {
+    final int laneChange = laneChangeCriteria(particle, roads);
+    if (laneChange != 0) {
+      final int newLane = particle.row() + laneChange;
+      final Particle newParticle = Particle.builder().from(particle)
+              .row(newLane)
+              .build();
+      if (newLane >= 0 && newLane < roads.length && roads[newLane][particle.col()] == null) {
+        final OptionalInt precedingDistance = distanceToPreviousParticle(roads, newParticle);
+        final OptionalInt successiveDistance = distanceToNextParticle(roads, newParticle);
+        if (!overlaps(particle, roads, newParticle.row(), newParticle.col())
+                && precedingDistance.orElse(Integer.MAX_VALUE) >= precedingGap
+                && successiveDistance.orElse(Integer.MAX_VALUE) >= successiveGap) {
+          return newParticle;
+        }
+      }
+    }
+    return null;
+  }
+
+  private int laneChangeCriteria(final Particle particle, final Either<Particle, ParticleWrapper>[][] roads) {
+    //TODO: cambiar el criterio
+    if (RANDOM.nextBoolean()) {
+      return 0;
+    }
+    return RANDOM.nextBoolean() ? 1 : -1;
   }
 
   private OptionalInt distanceToNextParticle(final Either<Particle, ParticleWrapper>[][] road,
@@ -231,12 +276,30 @@ public class TrafficSimulator implements Simulator {
     final int length = particle.length();
     for (int i = col + length; i < road[row].length; i++) {
       if (road[row][i] != null) {
-        if (!road[row][i].isValuePresent()) {
-          throw new IllegalStateException();
-        }
         return OptionalInt.of(i - col - length + 1);
       }
     }
     return OptionalInt.empty();
+  }
+
+  private OptionalInt distanceToPreviousParticle(final Either<Particle, ParticleWrapper>[][] road,
+                                                 final Particle particle) {
+    final int row = particle.row();
+    final int col = particle.col();
+    for (int i = col - 1; i >= 0; i--) {
+      if (road[row][i] != null) {
+        return OptionalInt.of(col - i);
+      }
+    }
+    return OptionalInt.empty();
+  }
+
+  private boolean overlaps(final Particle particle, final Either<Particle, ParticleWrapper>[][] road, final int fromRow, final int fromCol) {
+    for (int col = fromCol; col < fromCol + particle.length() && col < road[0].length; col++) {
+      if(road[fromRow][col] != null){
+        return true;
+      }
+    }
+    return false;
   }
 }

@@ -13,4 +13,8 @@ public class ParticleWrapper {
   public static ParticleWrapper of(final Particle particle) {
     return new ParticleWrapper(particle);
   }
+
+  public Particle getParticle() {
+    return particle;
+  }
 }
