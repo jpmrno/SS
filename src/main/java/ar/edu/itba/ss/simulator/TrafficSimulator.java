@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 import ar.edu.itba.ss.io.writer.ParticlesWriter;
 import ar.edu.itba.ss.model.Particle;
 import ar.edu.itba.ss.model.Road;
+import ar.edu.itba.ss.model.Segment;
 import ar.edu.itba.ss.model.TrafficLight;
 import ar.edu.itba.ss.model.TrafficLight.Status;
 import ar.edu.itba.ss.model.criteria.Criteria;
@@ -24,29 +25,35 @@ public class TrafficSimulator implements Simulator {
   private static final int RED_TIME = 7;
   private static final int YELLOW_TIME = 3;
   private static final int GREEN_TIME = 10;
-  private static final int[] VEHICLES = new int[]{1, 2, 3, 5};
-  private static final double[] VEHICLES_PROBABILITY = new double[]{0.1, 0.7, 0.15, 0.05};
+//  private static final int[] VEHICLES = new int[]{1, 2, 3, 5};
+//  private static final double[] VEHICLES_PROBABILITY = new double[]{0.1, 0.7, 0.15, 0.05};
+  private static final int[] VEHICLES = new int[]{1};
+  private static final double[] VEHICLES_PROBABILITY = new double[]{1};
   private static final EnumeratedIntegerDistribution vehiclesDistribution =
       new EnumeratedIntegerDistribution(VEHICLES, VEHICLES_PROBABILITY);
 
   private static int LAST_ID = 0;
 
-  private final Road road;
+  private final Segment segment;
 
   public TrafficSimulator(final int nVehicles, final int lanes, final int length, final int vMax,
       final double slowDownProbability) {
     final TrafficLight trafficLight = new TrafficLight(GREEN_TIME, YELLOW_TIME, RED_TIME, Status.RED);
-    this.road = new Road(lanes, length, trafficLight, vMax, slowDownProbability);
-    new ParticleGenerator(nVehicles).generate(this.road);
+    this.segment = new Road(lanes, length, trafficLight, vMax, slowDownProbability, null, null);
+    ((Road)this.segment).setNextSegment(this.segment);
+    ((Road)this.segment).setPreviousSegment(this.segment);
+    new ParticleGenerator(nVehicles).generate((Road)this.segment);
   }
 
   @Override
   public Set<Particle> simulate(final Criteria endCriteria, final ParticlesWriter writer) {
     Set<Particle> currentParticles;
     long iteration = 0;
-    road.print(writer, iteration);
     do {
-      currentParticles = road.timeLapse(++iteration, writer);
+      // en realidad deberia ser una lista de segmentos
+      segment.setActualized(true);
+      currentParticles = segment.timeLapse(++iteration, writer);
+      segment.setActualized(false);
     } while (!endCriteria.test(iteration, currentParticles));
     return currentParticles;
   }
