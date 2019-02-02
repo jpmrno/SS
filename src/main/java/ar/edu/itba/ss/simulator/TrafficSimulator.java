@@ -34,15 +34,21 @@ public class TrafficSimulator implements Simulator {
 
   private static int LAST_ID = 0;
 
-  private final Segment segment;
+  private final Segment segment1;
+  private final Segment segment2;
 
   public TrafficSimulator(final int nVehicles, final int lanes, final int length, final int vMax,
       final double slowDownProbability) {
-    final TrafficLight trafficLight = new TrafficLight(GREEN_TIME, YELLOW_TIME, RED_TIME, Status.RED);
-    this.segment = new Road(lanes, length, trafficLight, vMax, slowDownProbability, null, null);
-    ((Road)this.segment).setNextSegment(this.segment);
-    ((Road)this.segment).setPreviousSegment(this.segment);
-    new ParticleGenerator(nVehicles).generate((Road)this.segment);
+    final TrafficLight trafficLight1 = new TrafficLight(GREEN_TIME, YELLOW_TIME, RED_TIME, Status.RED);
+    final TrafficLight trafficLight2 = new TrafficLight(GREEN_TIME, YELLOW_TIME, RED_TIME, Status.RED);
+    this.segment1 = new Road(lanes, length, trafficLight1, vMax, slowDownProbability, null, null);
+    this.segment2 = new Road(lanes, length, trafficLight2, vMax, slowDownProbability, null, null);
+    ((Road)this.segment1).setNextSegment(this.segment2);
+    ((Road)this.segment1).setPreviousSegment(this.segment2);
+    ((Road)this.segment2).setNextSegment(this.segment1);
+    ((Road)this.segment2).setPreviousSegment(this.segment1);
+    new ParticleGenerator(nVehicles).generate((Road)this.segment1);
+    new ParticleGenerator(nVehicles).generate((Road)this.segment2);
   }
 
   @Override
@@ -51,9 +57,13 @@ public class TrafficSimulator implements Simulator {
     long iteration = 0;
     do {
       // en realidad deberia ser una lista de segmentos
-      segment.setActualized(true);
-      currentParticles = segment.timeLapse(++iteration, writer);
-      segment.setActualized(false);
+      segment1.setActualized(true);
+      currentParticles = segment1.timeLapse(++iteration, writer);
+      segment2.setActualized(true);
+      currentParticles = segment2.timeLapse(iteration, writer);
+      segment1.setActualized(false);
+      segment2.setActualized(false);
+      System.out.println("--------------------------------------------------------------------------------------------------------------------------------------------------------------------");
     } while (!endCriteria.test(iteration, currentParticles));
     return currentParticles;
   }

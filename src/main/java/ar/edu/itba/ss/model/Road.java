@@ -5,6 +5,7 @@ import static java.lang.Math.min;
 
 import ar.edu.itba.ss.io.writer.ParticlesWriter;
 import ar.edu.itba.ss.util.Either;
+
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -25,13 +26,13 @@ public final class Road implements Segment {
   private static final Comparator<Particle> VEHICLE_COMPARATOR = (o1, o2) -> {
     final int rowCmp = o1.row() - o2.row();
 
-    if(rowCmp != 0){
+    if (rowCmp != 0) {
       return rowCmp;
     }
 
     final int colCmp = o1.col() - o2.col();
 
-    if(colCmp != 0){
+    if (colCmp != 0) {
       return colCmp;
     }
 
@@ -96,18 +97,20 @@ public final class Road implements Segment {
   }
 
   private void remove(final Particle particle) {
-    if(isInsideRoad(particle.row(), particle.col())) {
+    if (isInsideRoad(particle.row(), particle.col())) {
       for (int i = particle.col(); i < laneLength() && i < particle.col() + particle.length(); i++) {
         lanes[particle.row()][i] = null;
       }
-      particles.remove(particle);
     }
+    particles.remove(particle);
   }
 
   @Override
   public void replace(final Particle particle, final Particle newParticle) {
     remove(particle);
-    put(newParticle);
+    if (isInsideRoad(newParticle)) {
+      put(newParticle);
+    }
   }
 
   @Override
@@ -117,7 +120,7 @@ public final class Road implements Segment {
 
   @Override
   public OptionalInt firstVehicleInLane(int lane) {
-      return distanceToNextParticle(lane, 0, 0);
+    return distanceToNextParticle(lane, 0, 0);
   }
 
   @Override
@@ -127,7 +130,7 @@ public final class Road implements Segment {
 
   @Override
   public void incomingVehicle(Particle vehicle) {
-    if(actualized){
+    if (actualized) {
       put(vehicle);
     } else {
       particles.add(vehicle);
@@ -161,33 +164,41 @@ public final class Road implements Segment {
       }
     }
 
+    Set<Particle[]> newParticles = new HashSet<>();
+
     // perform NaSch rules
     for (final Particle particle : particles()) {
       final OptionalInt distance = distanceToNextParticle(particle);
       final int newVelocity = velocity(particle, distance.orElse(Integer.MAX_VALUE));
       final int[] newPosition = moveForward(particle, newVelocity);
       final Particle newParticle = Particle.builder().from(particle)
-          .velocity(newVelocity)
-          .position(newPosition[0], newPosition[1])
-          .build();
-      if (isInsideRoad(newParticle)) {
-        replace(particle, newParticle);
-      } else {
-        remove(particle);
-        if(nextSegment != null){
-          final Particle vehicleForNextSegment = Particle.builder().from(newParticle)
-              .col(newParticle.col() - this.laneLength())
+              .velocity(newVelocity)
+              .position(newPosition[0], newPosition[1])
               .build();
-          nextSegment.incomingVehicle(vehicleForNextSegment);
+
+      newParticles.add(new Particle[]{particle, newParticle});
+      if (!isInsideRoad(newParticle) && nextSegment != null) {
+        Particle vehicleForNextSegment;
+        if (nextSegment.isActualized()) {
+          vehicleForNextSegment = Particle.builder().from(newParticle)
+                  .col(newParticle.col() - this.laneLength())
+                  .build();
+        } else {
+          vehicleForNextSegment = Particle.builder().from(particle)
+                  .col(particle.col() - this.laneLength())
+                  .build();
         }
+        nextSegment.incomingVehicle(vehicleForNextSegment);
       }
+
     }
+    newParticles.forEach(p -> replace(p[0], p[1]));
 
     print(writer, iteration);
     return particles;
   }
 
-  public void setNextSegment(Segment segment){
+  public void setNextSegment(Segment segment) {
     this.nextSegment = segment;
   }
 
@@ -216,14 +227,14 @@ public final class Road implements Segment {
     }
     final int newLane = particle.row() + laneChange;
     final Particle newParticle = Particle.builder().from(particle)
-        .row(newLane)
-        .build();
-    if (newLane >= 0 && newLane < lanes() && lanes[newLane][particle.col()] == null) {
+            .row(newLane)
+            .build();
+    if (newLane >= 0 && newLane < lanes()) {
       final OptionalInt precedingDistance = distanceToPreviousParticle(newParticle);
       final OptionalInt successiveDistance = distanceToNextParticle(newParticle);
-      if (!overlaps(particle, lanes, newParticle.row(), newParticle.col())
-          && precedingDistance.orElse(Integer.MAX_VALUE) >= precedingGap
-          && successiveDistance.orElse(Integer.MAX_VALUE) >= successiveGap) {
+      if (!overlaps(particle, newParticle.row(), newParticle.col())
+              && precedingDistance.orElse(Integer.MAX_VALUE) >= precedingGap
+              && successiveDistance.orElse(Integer.MAX_VALUE) >= successiveGap) {
         return newParticle;
       }
     }
@@ -232,16 +243,16 @@ public final class Road implements Segment {
 
   private int laneChangeCriteria(final Particle particle, final Either<Particle, ParticleWrapper>[][] roads) {
     //TODO: cambiar el criterio
-    return 0;
-//    if (RANDOM.nextBoolean()) {
-//      return 0;
-//    }
-//    return RANDOM.nextBoolean() ? 1 : -1;
+//    return 0;
+    if (RANDOM.nextBoolean()) {
+      return 0;
+    }
+    return RANDOM.nextBoolean() ? 1 : -1;
   }
 
-  private OptionalInt distanceToNextParticle(final int lane, final int col, final int vehicleLength){
+  private OptionalInt distanceToNextParticle(final int lane, final int col, final int vehicleLength) {
     for (int i = col + vehicleLength; i < lanes[lane].length; i++) {
-      if (lanes[lane][i] != null) {
+      if (isInsideRoad(lane,i) && lanes[lane][i] != null) {
         return OptionalInt.of(i - col - vehicleLength + 1);
       }
     }
@@ -249,13 +260,13 @@ public final class Road implements Segment {
     int distanceToEndOfSegment = laneLength() - col - vehicleLength + 1;
 
     if (distanceToEndOfSegment <= 0) {
-      if(nextSegment == null){
+      if (nextSegment == null) {
         return OptionalInt.empty();
       }
 
       OptionalInt distanceInNextSegment = nextSegment.firstVehicleInLane(lane);
 
-      if(distanceInNextSegment.isPresent()){
+      if (distanceInNextSegment.isPresent()) {
         return OptionalInt.of(lanes[lane].length - col - vehicleLength + distanceInNextSegment.getAsInt() + distanceToEndOfSegment);
       }
 
@@ -264,11 +275,11 @@ public final class Road implements Segment {
 
     int distanceToEndOfSegmentWithTrafficLight = distanceToEndOfSegment + trafficLight.currentStatus().additionalDistance();
 
-    if(nextSegment == null){
+    if (nextSegment == null) {
       return OptionalInt.of(distanceToEndOfSegmentWithTrafficLight);
     }
 
-    return OptionalInt.of(Math.min(distanceToEndOfSegmentWithTrafficLight, distanceToEndOfSegment + nextSegment.firstVehicleInLane(lane).orElse(vMax)));
+    return OptionalInt.of(Math.min(distanceToEndOfSegmentWithTrafficLight, distanceToEndOfSegment - 1 + nextSegment.firstVehicleInLane(lane).orElse(vMax)));
   }
 
   public OptionalInt distanceToNextParticle(final Particle particle) {
@@ -283,13 +294,13 @@ public final class Road implements Segment {
       }
     }
 
-    if(prevSegment == null){
+    if (prevSegment == null) {
       return OptionalInt.empty();
     }
 
     OptionalInt distanceInPrevSegment = prevSegment.lastVehicleInLane(lane);
 
-    if(distanceInPrevSegment.isPresent()){
+    if (distanceInPrevSegment.isPresent()) {
       return OptionalInt.of(col + distanceInPrevSegment.getAsInt());
     }
 
@@ -300,10 +311,21 @@ public final class Road implements Segment {
     return distanceToPreviousParticle(particle.row(), particle.col());
   }
 
-  private boolean overlaps(final Particle particle, final Either<Particle, ParticleWrapper>[][] road, final int fromRow,
-      final int fromCol) {
-    for (int col = fromCol; col < fromCol + particle.length() && col < road[0].length; col++) {
-      if (road[fromRow][col] != null) {
+  private boolean overlaps(final Particle particle, final int fromRow,
+                           final int fromCol) {
+    boolean overLapsPrevSegment = false;
+
+    if(fromCol < 0 && prevSegment != null && lastVehicleInLane(fromRow).orElse(prevSegment.vMax()) <= -fromCol){
+      return true;
+    }
+
+    if(fromCol + particle.length() - 1 >= laneLength() && nextSegment != null
+            && firstVehicleInLane(fromRow).orElse(nextSegment.vMax()) <= laneLength() - fromCol - particle.length()){
+      return true;
+    }
+
+    for (int col = min(fromCol, 0); col < fromCol + particle.length() && col < lanes[0].length; col++) {
+      if (lanes[fromRow][col] != null) {
         return true;
       }
     }
