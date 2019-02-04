@@ -327,8 +327,8 @@ public final class Road implements Segment {
             && firstVehicleInLane(fromRow).orElse(nextSegment.vMax()) <= laneLength() - fromCol - particle.length()) {
       return true;
     }
-
-    for (int col = min(fromCol, 0); col < fromCol + particle.length() && col < lanes[0].length; col++) {
+    
+    for (int col = max(fromCol, 0); col < fromCol + particle.length() && col < lanes[0].length; col++) {
       if (lanes[fromRow][col] != null) {
         return true;
       }

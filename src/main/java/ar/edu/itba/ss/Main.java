@@ -7,8 +7,8 @@ import ar.edu.itba.ss.util.Either;
 
 public class Main {
 
-  private static final int N_VEHICLES = 20;
-  private static final int LANES = 2;
+  private static final int N_VEHICLES = 40;
+  private static final int LANES = 5;
   private static final int LANES_LENGTH = 60;
   private static final int V_MAX = 6;
   private static final double SLOW_DOWN_P = 0;
