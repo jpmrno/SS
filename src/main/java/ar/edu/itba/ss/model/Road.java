@@ -71,6 +71,11 @@ public final class Road implements Segment {
   }
 
   @Override
+  public Either<Particle, ParticleWrapper>[][] getLanes() {
+    return lanes;
+  }
+
+  @Override
   public boolean isActualized() {
     return actualized;
   }
@@ -152,7 +157,7 @@ public final class Road implements Segment {
   }
 
   @Override
-  public Set<Particle> timeLapse(final long iteration, final ParticlesWriter writer) {
+  public Set<Particle> timeLapse() {
     // traffic light
     trafficLight.timeLapse();
 
@@ -194,7 +199,6 @@ public final class Road implements Segment {
     }
     newParticles.forEach(p -> replace(p[0], p[1]));
 
-    print(writer, iteration);
     return particles;
   }
 
@@ -252,7 +256,7 @@ public final class Road implements Segment {
 
   private OptionalInt distanceToNextParticle(final int lane, final int col, final int vehicleLength) {
     for (int i = col + vehicleLength; i < lanes[lane].length; i++) {
-      if (isInsideRoad(lane,i) && lanes[lane][i] != null) {
+      if (isInsideRoad(lane, i) && lanes[lane][i] != null) {
         return OptionalInt.of(i - col - vehicleLength + 1);
       }
     }
@@ -315,12 +319,12 @@ public final class Road implements Segment {
                            final int fromCol) {
     boolean overLapsPrevSegment = false;
 
-    if(fromCol < 0 && prevSegment != null && lastVehicleInLane(fromRow).orElse(prevSegment.vMax()) <= -fromCol){
+    if (fromCol < 0 && prevSegment != null && lastVehicleInLane(fromRow).orElse(prevSegment.vMax()) <= -fromCol) {
       return true;
     }
 
-    if(fromCol + particle.length() - 1 >= laneLength() && nextSegment != null
-            && firstVehicleInLane(fromRow).orElse(nextSegment.vMax()) <= laneLength() - fromCol - particle.length()){
+    if (fromCol + particle.length() - 1 >= laneLength() && nextSegment != null
+            && firstVehicleInLane(fromRow).orElse(nextSegment.vMax()) <= laneLength() - fromCol - particle.length()) {
       return true;
     }
 
@@ -338,16 +342,6 @@ public final class Road implements Segment {
 
   private boolean isInsideRoad(final Particle particle) {
     return isInsideRoad(particle.row(), particle.col());
-  }
-
-  public void print(final ParticlesWriter writer, final long iteration) {
-    try {
-      System.out.println("Traffic light: " + trafficLight.currentStatus());
-      writer.write(iteration, lanes, particles);
-    } catch (final IOException e) {
-      e.printStackTrace();
-      System.exit(1);
-    }
   }
 
   public interface ParticleGenerator {

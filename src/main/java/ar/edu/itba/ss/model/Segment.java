@@ -1,6 +1,7 @@
 package ar.edu.itba.ss.model;
 
 import ar.edu.itba.ss.io.writer.ParticlesWriter;
+import ar.edu.itba.ss.util.Either;
 
 import java.util.OptionalInt;
 import java.util.Set;
@@ -15,6 +16,8 @@ public interface Segment {
 
   Set<Particle> particles();
 
+  Either<Particle, ParticleWrapper>[][] getLanes();
+
   boolean isActualized();
 
   void setActualized(boolean actualized);
@@ -23,7 +26,7 @@ public interface Segment {
 
   void replace(final Particle particle, final Particle newParticle);
 
-  Set<Particle> timeLapse(final long iteration, final ParticlesWriter writer);
+  Set<Particle> timeLapse();
 
   boolean isValidPosition(final int particleRow, final int particleCol, final int particleLength);
 

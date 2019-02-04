@@ -3,10 +3,7 @@ package ar.edu.itba.ss.simulator;
 import static java.lang.Math.min;
 
 import ar.edu.itba.ss.io.writer.ParticlesWriter;
-import ar.edu.itba.ss.model.Particle;
-import ar.edu.itba.ss.model.Road;
-import ar.edu.itba.ss.model.Segment;
-import ar.edu.itba.ss.model.TrafficLight;
+import ar.edu.itba.ss.model.*;
 import ar.edu.itba.ss.model.TrafficLight.Status;
 import ar.edu.itba.ss.model.criteria.Criteria;
 import java.util.Comparator;
@@ -15,6 +12,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
+
+import ar.edu.itba.ss.util.Either;
 import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 
 public class TrafficSimulator implements Simulator {
@@ -58,11 +57,41 @@ public class TrafficSimulator implements Simulator {
     do {
       // en realidad deberia ser una lista de segmentos
       segment1.setActualized(true);
-      currentParticles = segment1.timeLapse(++iteration, writer);
+      currentParticles = segment1.timeLapse();
       segment2.setActualized(true);
-      currentParticles = segment2.timeLapse(iteration, writer);
+      currentParticles = segment2.timeLapse();
       segment1.setActualized(false);
       segment2.setActualized(false);
+
+      Either<Particle, ParticleWrapper>[][] lanes1 = segment1.getLanes();
+      Either<Particle, ParticleWrapper>[][] lanes2 = segment2.getLanes();
+
+      System.out.println("Iteration " + iteration++);
+
+      for (int row = 0; row < segment1.lanes(); row++) {
+        for (int col = 0; col < segment1.laneLength(); col++) {
+          if (lanes1[row][col] == null) {
+            System.out.print(".");
+          } else if (lanes1[row][col].isValuePresent()) {
+            System.out.print(lanes1[row][col].getValue().velocity());
+          } else {
+            System.out.print(">");
+          }
+        }
+
+        for (int col = 0; col < segment2.laneLength(); col++) {
+          if (lanes2[row][col] == null) {
+            System.out.print(".");
+          } else if (lanes2[row][col].isValuePresent()) {
+            System.out.print(lanes2[row][col].getValue().velocity());
+          } else {
+            System.out.print(">");
+          }
+        }
+
+        System.out.println();
+      }
+
       System.out.println("--------------------------------------------------------------------------------------------------------------------------------------------------------------------");
     } while (!endCriteria.test(iteration, currentParticles));
     return currentParticles;
