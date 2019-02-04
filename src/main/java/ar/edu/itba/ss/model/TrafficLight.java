@@ -10,6 +10,8 @@ public final class TrafficLight {
   private Status currentStatus;
   private int time;
 
+  public static TrafficLight ALWAYS_GREEN = new TrafficLight(1,0,0, Status.GREEN);
+
   public TrafficLight(final int greenTime, final int yellowTime, final int redTime, final Status currentStatus) {
     this.statusTimes = new HashMap<>();
     this.statusTimes.put(Status.GREEN, greenTime);
@@ -21,10 +23,16 @@ public final class TrafficLight {
 
   public void timeLapse() {
     time++;
-    if (time == statusTimes.get(currentStatus)) {
+    if (time >= statusTimes.get(currentStatus)) {
       currentStatus = currentStatus.nextStatus();
       time = 0;
+
+      if(statusTimes.get(currentStatus) == 0) {
+        timeLapse();
+      }
     }
+
+
   }
 
   public Status currentStatus() {
