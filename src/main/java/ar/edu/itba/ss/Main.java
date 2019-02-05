@@ -5,16 +5,25 @@ import ar.edu.itba.ss.model.ParticleWrapper;
 import ar.edu.itba.ss.simulator.TrafficSimulator;
 import ar.edu.itba.ss.util.Either;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Main {
 
   private static final int N_VEHICLES = 40;
   private static final int LANES = 5;
   private static final int LANES_LENGTH = 60;
   private static final int V_MAX = 6;
-  private static final double SLOW_DOWN_P = 0.4;
+  private static final double SLOW_DOWN_P = 0.0;
 
   public static void main(final String[] args) {
-    final TrafficSimulator simulator = new TrafficSimulator(N_VEHICLES, LANES, LANES_LENGTH, V_MAX, SLOW_DOWN_P);
+    final Map<Integer,Integer> maxVelocities = new HashMap();
+    for (int lane = 0; lane < LANES; lane++) {
+      maxVelocities.put(lane, V_MAX);
+    }
+
+
+    final TrafficSimulator simulator = new TrafficSimulator(N_VEHICLES, LANES, LANES_LENGTH, maxVelocities, SLOW_DOWN_P);
     simulator.simulate((i, p) -> p.isEmpty(), (it, m, p) -> {
       System.out.println("Iteration: " + it);
       for (int i = 0; i < m.length; i++) {

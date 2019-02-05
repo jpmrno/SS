@@ -3,6 +3,7 @@ package ar.edu.itba.ss.model;
 import ar.edu.itba.ss.io.writer.ParticlesWriter;
 import ar.edu.itba.ss.util.Either;
 
+import java.util.Map;
 import java.util.OptionalInt;
 import java.util.Set;
 
@@ -12,7 +13,7 @@ public interface Segment {
 
   int laneLength();
 
-  int vMax();
+  Map<Integer,Integer> maxVelocities();
 
   Set<Particle> particles();
 

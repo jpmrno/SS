@@ -6,10 +6,8 @@ import ar.edu.itba.ss.io.writer.ParticlesWriter;
 import ar.edu.itba.ss.model.*;
 import ar.edu.itba.ss.model.TrafficLight.Status;
 import ar.edu.itba.ss.model.criteria.Criteria;
-import java.util.Comparator;
-import java.util.OptionalInt;
-import java.util.Random;
-import java.util.Set;
+
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
@@ -36,12 +34,12 @@ public class TrafficSimulator implements Simulator {
   private final Segment segment1;
   private final Segment segment2;
 
-  public TrafficSimulator(final int nVehicles, final int lanes, final int length, final int vMax,
+  public TrafficSimulator(final int nVehicles, final int lanes, final int length, final Map<Integer,Integer> maxVelocities,
       final double slowDownProbability) {
     final TrafficLight trafficLight1 = new TrafficLight(GREEN_TIME, YELLOW_TIME, RED_TIME, Status.RED);
     final TrafficLight trafficLight2 = new TrafficLight(GREEN_TIME, YELLOW_TIME, RED_TIME, Status.RED);
-    this.segment1 = new Road(lanes, length, trafficLight1, vMax, slowDownProbability, null, null);
-    this.segment2 = new Road(lanes, length, trafficLight2, vMax, slowDownProbability, segment1, segment1);
+    this.segment1 = new Road(lanes, length, trafficLight1, maxVelocities, slowDownProbability, null, null);
+    this.segment2 = new Road(lanes, length, trafficLight2, maxVelocities, slowDownProbability, segment1, segment1);
     ((Road)this.segment1).setNextSegment(this.segment2);
     ((Road)this.segment1).setPreviousSegment(this.segment2);
     new ParticleGenerator(nVehicles).generate((Road)this.segment1);
@@ -149,7 +147,7 @@ public class TrafficSimulator implements Simulator {
     private void putParticleWithProperties(final Road road, final Particle particle, final int distance,
         final int length) {
       final Particle newParticle = Particle.builder().from(particle)
-          .velocity(RANDOM.nextInt(min(road.vMax(), distance - length) + 1))
+          .velocity(RANDOM.nextInt(min(road.maxVelocities().get(particle.row()), distance - length) + 1))
           .length(length)
           .build();
       road.replace(particle, newParticle);
