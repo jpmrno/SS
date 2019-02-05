@@ -11,7 +11,7 @@ public class Main {
   private static final int LANES = 5;
   private static final int LANES_LENGTH = 60;
   private static final int V_MAX = 6;
-  private static final double SLOW_DOWN_P = 0;
+  private static final double SLOW_DOWN_P = 0.4;
 
   public static void main(final String[] args) {
     final TrafficSimulator simulator = new TrafficSimulator(N_VEHICLES, LANES, LANES_LENGTH, V_MAX, SLOW_DOWN_P);
