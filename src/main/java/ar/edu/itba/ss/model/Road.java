@@ -21,9 +21,11 @@ public final class Road implements Segment {
   private Segment nextSegment;
   private boolean actualized = false;
   private Set<Particle> alreadyMoved;
+  private final int[] vehicleLengths;
+  private final double[] vehicleProbabilities;
 
   public Road(final int lanes, final int length, final TrafficLight trafficLight, final Map<Integer, Integer> maxVelocities,
-              final double slowDownProbability, Segment prevSegment, Segment nextSegment) {
+              final double slowDownProbability, int[] vehicleLengths, double[] vehicleProbabilities, Segment prevSegment, Segment nextSegment) {
     this.trafficLight = trafficLight;
     this.prevSegment = prevSegment;
     this.nextSegment = nextSegment;
@@ -32,6 +34,8 @@ public final class Road implements Segment {
     this.slowDownProbability = slowDownProbability;
     this.particles = new HashSet<>();
     this.alreadyMoved = new HashSet<>();
+    this.vehicleLengths = vehicleLengths;
+    this.vehicleProbabilities = vehicleProbabilities;
   }
 
   @Override
@@ -124,6 +128,24 @@ public final class Road implements Segment {
     }
 
     put(vehicle);
+  }
+
+  @Override
+  public void randomIncomingVehicle() {
+    boolean created = false;
+    while (!created) {
+      final int row = RANDOM.nextInt(lanes());
+      final int col = 0;
+      if (isValidPosition(row, col, 1)) {
+        created = true;
+        final Particle particle = Particle.builder()
+                //TODO: ver que hacer con esto
+//                .id(++LAST_ID)
+                .position(row, col)
+                .build();
+        put(particle);
+      }
+    }
   }
 
   @Override
@@ -335,8 +357,12 @@ public final class Road implements Segment {
     return isInsideRoad(particle.row(), particle.col());
   }
 
-  public interface ParticleGenerator {
-
-    void generate(final Road road);
+  public int[] getVehicleLengths() {
+    return vehicleLengths;
   }
+
+  public double[] getVehicleProbabilities() {
+    return vehicleProbabilities;
+  }
+
 }
