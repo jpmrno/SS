@@ -38,8 +38,8 @@ public class TrafficSimulator implements Simulator {
       final double slowDownProbability) {
     final TrafficLight trafficLight1 = new TrafficLight(GREEN_TIME, YELLOW_TIME, RED_TIME, Status.RED);
     final TrafficLight trafficLight2 = new TrafficLight(GREEN_TIME, YELLOW_TIME, RED_TIME, Status.RED);
-    this.segment1 = new Road(lanes, length, trafficLight1, maxVelocities, slowDownProbability, null, null);
-    this.segment2 = new Road(lanes, length, trafficLight2, maxVelocities, slowDownProbability, segment1, segment1);
+    this.segment1 = new Road(lanes, length, TrafficLight.ALWAYS_GREEN, maxVelocities, slowDownProbability, null, null);
+    this.segment2 = new Road(lanes, length, TrafficLight.ALWAYS_GREEN, maxVelocities, slowDownProbability, segment1, segment1);
     ((Road)this.segment1).setNextSegment(this.segment2);
     ((Road)this.segment1).setPreviousSegment(this.segment2);
     new ParticleGenerator(nVehicles).generate((Road)this.segment1);

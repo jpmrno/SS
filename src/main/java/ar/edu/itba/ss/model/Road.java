@@ -1,14 +1,12 @@
 package ar.edu.itba.ss.model;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
-import ar.edu.itba.ss.io.writer.ParticlesWriter;
 import ar.edu.itba.ss.util.Either;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 public final class Road implements Segment {
 
@@ -24,22 +22,6 @@ public final class Road implements Segment {
   private boolean actualized = false;
   private Set<Particle> alreadyMoved;
 
-  private static final Comparator<Particle> VEHICLE_COMPARATOR = (o1, o2) -> {
-    final int rowCmp = o1.row() - o2.row();
-
-    if (rowCmp != 0) {
-      return rowCmp;
-    }
-
-    final int colCmp = o1.col() - o2.col();
-
-    if (colCmp != 0) {
-      return colCmp;
-    }
-
-    return o1.id() - o2.id();
-  };
-
   public Road(final int lanes, final int length, final TrafficLight trafficLight, final Map<Integer, Integer> maxVelocities,
               final double slowDownProbability, Segment prevSegment, Segment nextSegment) {
     this.trafficLight = trafficLight;
@@ -48,7 +30,7 @@ public final class Road implements Segment {
     this.lanes = new Either[lanes][length];
     this.maxVelocities = maxVelocities;
     this.slowDownProbability = slowDownProbability;
-    this.particles = new TreeSet<>(VEHICLE_COMPARATOR);
+    this.particles = new HashSet<>();
     this.alreadyMoved = new HashSet<>();
   }
 
@@ -239,7 +221,7 @@ public final class Road implements Segment {
             .row(newLane)
             .build();
 
-    if(isLaneChangePossible(newParticle,  maxVelocities.get(newParticle.row()), newParticle.velocity())) {
+    if(isInsideRoad(newParticle) && isLaneChangePossible(newParticle,  maxVelocities.get(newParticle.row()), newParticle.velocity())) {
       return newParticle;
     }
 
@@ -248,18 +230,14 @@ public final class Road implements Segment {
 
   private int laneChangeCriteria(final Particle particle, final Either<Particle, ParticleWrapper>[][] roads) {
     //TODO: cambiar el criterio
-    return 0;
-//    if (RANDOM.nextBoolean()) {
-//      return 0;
-//    }
-//    return RANDOM.nextBoolean() ? 1 : -1;
+//    return 0;
+    if (RANDOM.nextBoolean()) {
+      return 0;
+    }
+    return RANDOM.nextBoolean() ? 1 : -1;
   }
 
   private boolean isLaneChangePossible(final Particle vehicle, final int precedingGap, final int successiveGap) {
-    if(!isValidPosition(vehicle)) {
-      return false;
-    }
-
     final OptionalInt precedingDistance = distanceToPreviousParticle(vehicle);
     final OptionalInt successiveDistance = distanceToNextParticle(vehicle);
 
