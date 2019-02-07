@@ -1,4 +1,4 @@
-package ar.edu.itba.ss.model.generators;
+package ar.edu.itba.ss.model.generator;
 
 import ar.edu.itba.ss.model.Particle;
 import ar.edu.itba.ss.model.Road;
@@ -30,15 +30,22 @@ public class VehicleGenerator {
   }
 
   public void generate(final Road road, int nVehicles) {
-    generateParticles(road, nVehicles);
+    generateParticles(road, nVehicles, 0, road.lanes(), 0, road.laneLength());
     updateParticlesWithProperties(road);
   }
 
-  private void generateParticles(final Road road, final int nVehicles) {
+  public void generate(final Road road, int nVehicles, final int fromRow, final int toRow,
+                       final int fromCol, final int toCol) {
+    generateParticles(road, nVehicles, fromRow, toRow, fromCol, toCol);
+    updateParticlesWithProperties(road);
+  }
+
+  private void generateParticles(final Road road, final int nVehicles, final int fromRow, final int toRow,
+                                 final int fromCol, final int toCol) {
     int vehicles = 0;
     while (vehicles != nVehicles) {
-      final int row = RANDOM.nextInt(road.lanes());
-      final int col = RANDOM.nextInt(road.laneLength());
+      final int row = RANDOM.nextInt(toRow) + fromRow;
+      final int col = RANDOM.nextInt(toCol) + fromCol;
       if (road.isValidPosition(row, col, 1)) {
         vehicles++;
         final Particle particle = Particle.builder()

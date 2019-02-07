@@ -8,9 +8,8 @@ import ar.edu.itba.ss.model.TrafficLight.Status;
 import ar.edu.itba.ss.model.criteria.Criteria;
 
 import java.util.*;
-import java.util.function.Consumer;
 
-import ar.edu.itba.ss.model.generators.VehicleGenerator;
+import ar.edu.itba.ss.model.generator.VehicleGenerator;
 import ar.edu.itba.ss.util.Either;
 
 public class TrafficSimulator implements Simulator {
@@ -36,11 +35,7 @@ public class TrafficSimulator implements Simulator {
             VEHICLES_PROBABILITY, null, null, null);
     this.road2 = new Road(lanes, length, TrafficLight.ALWAYS_GREEN, maxVelocities, slowDownProbability, VEHICLES,
             VEHICLES_PROBABILITY, road1, road1, p -> {
-      p = Particle.builder().from(p)
-              .col(p.col() - length)
-              .build();
-
-      road1.incomingVehicle(p);
+      road1.randomIncomingVehicle();
     });
     road1.setNextSegment(this.road2);
     road1.setPreviousSegment(this.road2);
@@ -84,7 +79,7 @@ public class TrafficSimulator implements Simulator {
             System.out.print(">");
           }
         }
-
+        System.out.print("|");
         for (int col = 0; col < road2.laneLength(); col++) {
           if (lanes2[row][col] == null) {
             System.out.print(".");

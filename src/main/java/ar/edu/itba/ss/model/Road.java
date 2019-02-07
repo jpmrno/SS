@@ -1,5 +1,6 @@
 package ar.edu.itba.ss.model;
 
+import ar.edu.itba.ss.model.generator.VehicleGenerator;
 import ar.edu.itba.ss.util.Either;
 
 import java.util.*;
@@ -25,6 +26,7 @@ public final class Road implements Segment {
   private final int[] vehicleLengths;
   private final double[] vehicleProbabilities;
   private Consumer<Particle> onExit;
+  private final VehicleGenerator vehicleGenerator;
 
   public Road(final int lanes, final int length, final TrafficLight trafficLight, final Map<Integer, Integer> maxVelocities,
               final double slowDownProbability, int[] vehicleLengths, double[] vehicleProbabilities, Segment prevSegment, Segment nextSegment, Consumer<Particle> onExit) {
@@ -39,6 +41,7 @@ public final class Road implements Segment {
     this.alreadyMoved = new HashSet<>();
     this.vehicleLengths = vehicleLengths;
     this.vehicleProbabilities = vehicleProbabilities;
+    this.vehicleGenerator = VehicleGenerator.getInstance();
   }
 
   @Override
@@ -135,20 +138,7 @@ public final class Road implements Segment {
 
   @Override
   public void randomIncomingVehicle() {
-    boolean created = false;
-    while (!created) {
-      final int row = RANDOM.nextInt(lanes());
-      final int col = 0;
-      if (isValidPosition(row, col, 1)) {
-        created = true;
-        final Particle particle = Particle.builder()
-                //TODO: ver que hacer con esto
-//                .id(++LAST_ID)
-                .position(row, col)
-                .build();
-        put(particle);
-      }
-    }
+    vehicleGenerator.generate(this, 1, 0, lanes(), 0, 1);
   }
 
   @Override
@@ -195,15 +185,6 @@ public final class Road implements Segment {
 
         newParticles.add(new Particle[]{particle, newParticle});
 
-//        if (!isInsideRoad(newParticle) && nextSegment != null) {
-//          Particle vehicleForNextSegment;
-//
-//          vehicleForNextSegment = Particle.builder().from(newParticle)
-//                  .col(newParticle.col() - this.laneLength())
-//                  .build();
-//
-//          nextSegment.incomingVehicle(vehicleForNextSegment);
-//        }
         if (!isInsideRoad(newParticle) && onExit != null) {
           onExit.accept(newParticle);
         }
@@ -260,11 +241,11 @@ public final class Road implements Segment {
 
   private int laneChangeCriteria(final Particle particle, final Either<Particle, ParticleWrapper>[][] roads) {
     //TODO: cambiar el criterio
-//    return 0;
-    if (RANDOM.nextBoolean()) {
-      return 0;
-    }
-    return RANDOM.nextBoolean() ? 1 : -1;
+    return 0;
+//    if (RANDOM.nextBoolean()) {
+//      return 0;
+//    }
+//    return RANDOM.nextBoolean() ? 1 : -1;
   }
 
   private boolean isLaneChangePossible(final Particle vehicle, final int precedingGap, final int successiveGap) {
