@@ -6,6 +6,7 @@ import ar.edu.itba.ss.util.Either;
 import java.util.Map;
 import java.util.OptionalInt;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public interface Segment {
 
@@ -40,7 +41,6 @@ public interface Segment {
   void incomingVehicle(Particle vehicle);
 
   void randomIncomingVehicle();
-
 
 
   // TODO: Falta un onParticleExit(callback) para avisarle a la union que se fue un auto o una parte de un auto

@@ -4,6 +4,7 @@ import ar.edu.itba.ss.util.Either;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Consumer;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -23,12 +24,14 @@ public final class Road implements Segment {
   private Set<Particle> alreadyMoved;
   private final int[] vehicleLengths;
   private final double[] vehicleProbabilities;
+  private Consumer<Particle> onExit;
 
   public Road(final int lanes, final int length, final TrafficLight trafficLight, final Map<Integer, Integer> maxVelocities,
-              final double slowDownProbability, int[] vehicleLengths, double[] vehicleProbabilities, Segment prevSegment, Segment nextSegment) {
+              final double slowDownProbability, int[] vehicleLengths, double[] vehicleProbabilities, Segment prevSegment, Segment nextSegment, Consumer<Particle> onExit) {
     this.trafficLight = trafficLight;
     this.prevSegment = prevSegment;
     this.nextSegment = nextSegment;
+    this.onExit = onExit;
     this.lanes = new Either[lanes][length];
     this.maxVelocities = maxVelocities;
     this.slowDownProbability = slowDownProbability;
@@ -192,14 +195,17 @@ public final class Road implements Segment {
 
         newParticles.add(new Particle[]{particle, newParticle});
 
-        if (!isInsideRoad(newParticle) && nextSegment != null) {
-          Particle vehicleForNextSegment;
-
-          vehicleForNextSegment = Particle.builder().from(newParticle)
-                  .col(newParticle.col() - this.laneLength())
-                  .build();
-
-          nextSegment.incomingVehicle(vehicleForNextSegment);
+//        if (!isInsideRoad(newParticle) && nextSegment != null) {
+//          Particle vehicleForNextSegment;
+//
+//          vehicleForNextSegment = Particle.builder().from(newParticle)
+//                  .col(newParticle.col() - this.laneLength())
+//                  .build();
+//
+//          nextSegment.incomingVehicle(vehicleForNextSegment);
+//        }
+        if (!isInsideRoad(newParticle) && onExit != null) {
+          onExit.accept(newParticle);
         }
       }
     }
@@ -235,9 +241,11 @@ public final class Road implements Segment {
 
   private Particle laneChange(final Particle particle) {
     final int laneChange = laneChangeCriteria(particle, lanes);
+
     if (laneChange == 0) {
       return null;
     }
+
     final int newLane = particle.row() + laneChange;
     final Particle newParticle = Particle.builder().from(particle)
             .row(newLane)
@@ -365,4 +373,7 @@ public final class Road implements Segment {
     return vehicleProbabilities;
   }
 
+  public void setOnExit(Consumer<Particle> onExit) {
+    this.onExit = onExit;
+  }
 }

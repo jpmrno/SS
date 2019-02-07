@@ -8,12 +8,10 @@ import ar.edu.itba.ss.model.TrafficLight.Status;
 import ar.edu.itba.ss.model.criteria.Criteria;
 
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.IntStream;
+import java.util.function.Consumer;
 
 import ar.edu.itba.ss.model.generators.VehicleGenerator;
 import ar.edu.itba.ss.util.Either;
-import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 
 public class TrafficSimulator implements Simulator {
 
@@ -27,20 +25,35 @@ public class TrafficSimulator implements Simulator {
   private static final double[] VEHICLES_PROBABILITY = new double[]{1};
   private final VehicleGenerator generator;
 
-  private final Segment segment1;
-  private final Segment segment2;
+  private final Road road1;
+  private final Road road2;
 
   public TrafficSimulator(final int nVehicles, final int lanes, final int length, final Map<Integer,Integer> maxVelocities,
       final double slowDownProbability) {
     final TrafficLight trafficLight1 = new TrafficLight(GREEN_TIME, YELLOW_TIME, RED_TIME, Status.RED);
     final TrafficLight trafficLight2 = new TrafficLight(GREEN_TIME, YELLOW_TIME, RED_TIME, Status.RED);
-    this.segment1 = new Road(lanes, length, TrafficLight.ALWAYS_GREEN, maxVelocities, slowDownProbability, VEHICLES, VEHICLES_PROBABILITY, null, null);
-    this.segment2 = new Road(lanes, length, TrafficLight.ALWAYS_GREEN, maxVelocities, slowDownProbability, VEHICLES, VEHICLES_PROBABILITY, segment1, segment1);
-    ((Road)this.segment1).setNextSegment(this.segment2);
-    ((Road)this.segment1).setPreviousSegment(this.segment2);
+    this.road1 = new Road(lanes, length, TrafficLight.ALWAYS_GREEN, maxVelocities, slowDownProbability, VEHICLES,
+            VEHICLES_PROBABILITY, null, null, null);
+    this.road2 = new Road(lanes, length, TrafficLight.ALWAYS_GREEN, maxVelocities, slowDownProbability, VEHICLES,
+            VEHICLES_PROBABILITY, road1, road1, p -> {
+      p = Particle.builder().from(p)
+              .col(p.col() - length)
+              .build();
+
+      road1.incomingVehicle(p);
+    });
+    road1.setNextSegment(this.road2);
+    road1.setPreviousSegment(this.road2);
+    road1.setOnExit(p -> {
+      p = Particle.builder().from(p)
+                  .col(p.col() - length)
+                  .build();
+
+      road2.incomingVehicle(p);
+    });
     this.generator = VehicleGenerator.getInstance();
-    generator.generate((Road)this.segment1, nVehicles);
-    generator.generate((Road)this.segment2, nVehicles);
+    generator.generate((Road)this.road1, nVehicles);
+    generator.generate((Road)this.road2, nVehicles);
   }
 
   @Override
@@ -49,20 +62,20 @@ public class TrafficSimulator implements Simulator {
     long iteration = 0;
     do {
       // en realidad deberia ser una lista de segmentos
-      segment1.setActualized(true);
-      currentParticles = segment1.timeLapse();
-      segment2.setActualized(true);
-      currentParticles = segment2.timeLapse();
-      segment1.setActualized(false);
-      segment2.setActualized(false);
+      road1.setActualized(true);
+      currentParticles = road1.timeLapse();
+      road2.setActualized(true);
+      currentParticles = road2.timeLapse();
+      road1.setActualized(false);
+      road2.setActualized(false);
 
-      Either<Particle, ParticleWrapper>[][] lanes1 = segment1.getLanes();
-      Either<Particle, ParticleWrapper>[][] lanes2 = segment2.getLanes();
+      Either<Particle, ParticleWrapper>[][] lanes1 = road1.getLanes();
+      Either<Particle, ParticleWrapper>[][] lanes2 = road2.getLanes();
 
       System.out.println("Iteration " + iteration++);
 
-      for (int row = 0; row < segment1.lanes(); row++) {
-        for (int col = 0; col < segment1.laneLength(); col++) {
+      for (int row = 0; row < road1.lanes(); row++) {
+        for (int col = 0; col < road1.laneLength(); col++) {
           if (lanes1[row][col] == null) {
             System.out.print(".");
           } else if (lanes1[row][col].isValuePresent()) {
@@ -72,7 +85,7 @@ public class TrafficSimulator implements Simulator {
           }
         }
 
-        for (int col = 0; col < segment2.laneLength(); col++) {
+        for (int col = 0; col < road2.laneLength(); col++) {
           if (lanes2[row][col] == null) {
             System.out.print(".");
           } else if (lanes2[row][col].isValuePresent()) {
