@@ -1,5 +1,6 @@
 package ar.edu.itba.ss.model;
 
+import ar.edu.itba.ss.util.VehicleType;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -17,8 +18,8 @@ public abstract class Particle {
   }
 
   @Value.Default
-  public int length() {
-    return 1;
+  public VehicleType vehicleType() {
+    return VehicleType.MOTORCYCLE;
   }
 
   public static Builder builder() {

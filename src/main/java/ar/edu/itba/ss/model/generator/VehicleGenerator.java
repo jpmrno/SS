@@ -2,7 +2,10 @@ package ar.edu.itba.ss.model.generator;
 
 import ar.edu.itba.ss.model.Particle;
 import ar.edu.itba.ss.model.Road;
+import ar.edu.itba.ss.util.VehicleType;
+import org.apache.commons.math3.distribution.EnumeratedDistribution;
 import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
+import org.apache.commons.math3.util.Pair;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -17,8 +20,6 @@ public class VehicleGenerator {
 
   private static final Random RANDOM = ThreadLocalRandom.current();
   private static int LAST_ID = 0;
-  private OptionalInt distanceOptional;
-  private int uninitializedVehicles;
 
   private VehicleGenerator() {
   }
@@ -39,7 +40,7 @@ public class VehicleGenerator {
   }
 
   public int generate(final Road road, int nVehicles, final int fromRow, final int toRow,
-                       final int fromCol, final int toCol) {
+                      final int fromCol, final int toCol) {
     Set<Particle> generated = new HashSet<>();
     int uninitializedVehicles = generateParticles(road, nVehicles, fromRow, toRow, fromCol, toCol, generated);
     generated.forEach(p -> {
@@ -49,7 +50,7 @@ public class VehicleGenerator {
   }
 
   private int generateParticles(final Road road, final int nVehicles, final int fromRow, final int toRow,
-                                          final int fromCol, final int toCol, Set<Particle> generated) {
+                                final int fromCol, final int toCol, Set<Particle> generated) {
     int vehicles = 0;
     List<Integer> rows = IntStream.range(fromRow, toRow).boxed().collect(Collectors.toList());
     List<Integer> cols = IntStream.range(fromCol, toCol).boxed().collect(Collectors.toList());
@@ -71,7 +72,7 @@ public class VehicleGenerator {
                 .position(row, col)
                 .build();
         road.put(particle);
-        if(generated != null){
+        if (generated != null) {
           generated.add(particle);
         }
       }
@@ -84,39 +85,42 @@ public class VehicleGenerator {
     final OptionalInt distanceOptional = road.distanceToNextParticle(particle);
     final int distance = distanceOptional.getAsInt();
 
-    int length = getRandomVehicleLength(new EnumeratedIntegerDistribution(road.getVehicleLengths(), road.getVehicleProbabilities()));
-    if (length <= distance) {
-      putParticleWithProperties(road, particle, distance, length);
+    List<Pair<VehicleType, Double>> pairs = new ArrayList<>();
+    for (int i = 0; i < road.getVehicleProbabilities().length; i++) {
+      pairs.add(new Pair(road.getVehicleTypes()[i], road.getVehicleProbabilities()[i]));
+    }
+
+    VehicleType type = getRandomVehicleType(new EnumeratedDistribution(pairs));
+
+    if (type.getLength() <= distance) {
+      putParticleWithProperties(road, particle, type);
     } else {
-      final int[] lengths = previousLengths(length, road.getVehicleLengths());
-      for (final int otherLength : lengths) {
-        if (otherLength <= distance) {
-          putParticleWithProperties(road, particle, distance, otherLength);
+      final List<VehicleType> types = previousLengths(type.getLength(), road.getVehicleTypes());
+      for (final VehicleType otherType : types) {
+        if (otherType.getLength() <= distance) {
+          putParticleWithProperties(road, particle, otherType);
           return;
         }
       }
     }
   }
 
-  private void putParticleWithProperties(final Road road, final Particle particle, final int distance,
-                                         final int length) {
+  private void putParticleWithProperties(final Road road, final Particle particle, final VehicleType type) {
     final Particle newParticle = Particle.builder().from(particle)
-            .velocity(RANDOM.nextInt(road.maxVelocities().get(particle.row()) + 1))
-            .length(length)
+            .velocity(RANDOM.nextInt(type.getMaxVelocity() + 1))
+            .vehicleType(type)
             .build();
     road.replace(particle, newParticle);
   }
 
-  private static int getRandomVehicleLength(EnumeratedIntegerDistribution vehiclesDistribution) {
+  private static VehicleType getRandomVehicleType(EnumeratedDistribution<VehicleType> vehiclesDistribution) {
     return vehiclesDistribution.sample();
   }
 
-  private static int[] previousLengths(final int lastLength, int[] vehicleLengths) {
-    return IntStream.of(vehicleLengths)
-            .boxed()
-            .sorted(Comparator.reverseOrder())
-            .filter(l -> l < lastLength)
-            .mapToInt(i -> i)
-            .toArray();
+  private static List<VehicleType> previousLengths(final int lastLength, VehicleType[] vehicleTypes) {
+    return Arrays.stream(vehicleTypes)
+            .sorted((o1, o2) -> o2.getLength() - o1.getLength())
+            .filter(v -> v.getLength() < lastLength)
+            .collect(Collectors.toList());
   }
 }
