@@ -126,11 +126,13 @@ public final class Road {
   }
 
   public boolean randomIncomingVehicle() {
-    return vehicleGenerator.generate(this, 1, 0, lanes(), 0, 1) != 1;
+    return vehicleGenerator.generate(this, 1, 0, lanes(),
+            0, 1) != 1;
   }
 
   public boolean randomVehicle() {
-    return vehicleGenerator.generate(this, 1, 0, lanes(), 0, laneLength()) != 1;
+    return vehicleGenerator.generate(this, 1, 0, lanes(),
+            0, laneLength()) != 1;
   }
 
   public boolean isValidPosition(final int particleRow, final int particleCol, final int particleLength) {

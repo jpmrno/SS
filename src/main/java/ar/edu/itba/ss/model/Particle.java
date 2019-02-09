@@ -12,6 +12,8 @@ public abstract class Particle {
 
   public abstract int col();
 
+  public abstract int maxVelocity();
+
   @Value.Default
   public int velocity() {
     return 1;

@@ -13,6 +13,7 @@ public enum VehicleType {
   VehicleType(int length, int maxVelocity) {
     this.length = length;
     this.maxVelocity = maxVelocity;
+
   }
 
   public int getLength() {

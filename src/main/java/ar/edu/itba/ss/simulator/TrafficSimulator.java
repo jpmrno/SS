@@ -9,6 +9,8 @@ import ar.edu.itba.ss.model.criteria.Criteria;
 import ar.edu.itba.ss.model.generator.VehicleGenerator;
 import ar.edu.itba.ss.util.Either;
 import ar.edu.itba.ss.util.VehicleType;
+import org.apache.commons.math3.distribution.NormalDistribution;
+import org.apache.commons.math3.random.GaussianRandomGenerator;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,9 +34,11 @@ public class TrafficSimulator implements Simulator {
   private final Road road2;
 
   public TrafficSimulator(final int nVehicles, final int lanes, final int length, final double slowDownProbability,
-                          BiFunction<Particle, Road, List<Particle>> laneChanger) {
+                          BiFunction<Particle, Road, List<Particle>> laneChanger, final double sigma) {
 //    final TrafficLight trafficLight1 = new TrafficLight(GREEN_TIME, YELLOW_TIME, RED_TIME, Status.RED);
 //    final TrafficLight trafficLight2 = new TrafficLight(GREEN_TIME, YELLOW_TIME, RED_TIME, Status.RED);
+    NormalDistribution distribution = new NormalDistribution(0, sigma * sigma);
+    distribution.sample();
     this.road0 = new Road(lanes, length / 2, TrafficLight.ALWAYS_GREEN, slowDownProbability, VEHICLES,
             VEHICLES_PROBABILITY, null, null, null, (v, r) -> Collections.singletonList(v));
     this.road1 = new Road(lanes, length, TrafficLight.ALWAYS_GREEN, slowDownProbability, VEHICLES,
@@ -64,8 +68,9 @@ public class TrafficSimulator implements Simulator {
       road1.incomingVehicle(p);
     });
     this.generator = VehicleGenerator.getInstance();
-    generator.generateInitialVehicles(this.road1, nVehicles);
-    generator.generateInitialVehicles(this.road2, nVehicles);
+    //TODO: hacer bien la funcion
+    generator.generateInitialVehicles(this.road1, nVehicles, v -> v.getMaxVelocity());
+    generator.generateInitialVehicles(this.road2, nVehicles, v -> v.getMaxVelocity());
   }
 
   @Override
