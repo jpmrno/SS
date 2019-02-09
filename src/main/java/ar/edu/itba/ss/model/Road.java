@@ -15,7 +15,7 @@ public final class Road implements Segment {
   private static final Random RANDOM = ThreadLocalRandom.current();
 
   private final Either<Particle, ParticleWrapper>[][] lanes;
-  private final Map<Integer,Integer> maxVelocities;
+  private final Map<Integer, Integer> maxVelocities;
   private final TrafficLight trafficLight;
   private Set<Particle> particles;
   private final double slowDownProbability;
@@ -27,6 +27,7 @@ public final class Road implements Segment {
   private final double[] vehicleProbabilities;
   private Consumer<Particle> onExit;
   private final VehicleGenerator vehicleGenerator;
+  private int vehiclesToBeCreated = 0;
 
   public Road(final int lanes, final int length, final TrafficLight trafficLight, final Map<Integer, Integer> maxVelocities,
               final double slowDownProbability, int[] vehicleLengths, double[] vehicleProbabilities, Segment prevSegment, Segment nextSegment, Consumer<Particle> onExit) {
@@ -96,12 +97,14 @@ public final class Road implements Segment {
   }
 
   private void remove(final Particle particle) {
-    if (isInsideRoad(particle.row(), particle.col())) {
-      for (int i = particle.col(); i < laneLength() && i < particle.col() + particle.length(); i++) {
-        lanes[particle.row()][i] = null;
+    if (particles.contains(particle)) {
+      if (isInsideRoad(particle.row(), particle.col())) {
+        for (int i = particle.col(); i < laneLength() && i < particle.col() + particle.length(); i++) {
+          lanes[particle.row()][i] = null;
+        }
       }
+      particles.remove(particle);
     }
-    particles.remove(particle);
   }
 
   @Override
@@ -137,8 +140,8 @@ public final class Road implements Segment {
   }
 
   @Override
-  public void randomIncomingVehicle() {
-    vehicleGenerator.generate(this, 1, 0, lanes(), 0, 1);
+  public boolean randomIncomingVehicle() {
+    return vehicleGenerator.generate(this, 1, 0, lanes(), 0, 1) != 1;
   }
 
   @Override
@@ -195,6 +198,10 @@ public final class Road implements Segment {
 
     alreadyMoved.clear();
 
+    while (vehiclesToBeCreated > 0 && randomIncomingVehicle()) {
+      vehiclesToBeCreated--;
+    }
+
     return particles;
   }
 
@@ -232,7 +239,7 @@ public final class Road implements Segment {
             .row(newLane)
             .build();
 
-    if(isInsideRoad(newParticle) && isLaneChangePossible(newParticle,  maxVelocities.get(newParticle.row()), newParticle.velocity())) {
+    if (isInsideRoad(newParticle) && isLaneChangePossible(newParticle, maxVelocities.get(newParticle.row()), newParticle.velocity())) {
       return newParticle;
     }
 
@@ -267,17 +274,18 @@ public final class Road implements Segment {
     int distanceToEndOfSegment = laneLength() - col - vehicleLength + 1;
 
     if (distanceToEndOfSegment <= 0) {
-      if (nextSegment == null) {
-        return OptionalInt.empty();
-      }
-
-      OptionalInt distanceInNextSegment = nextSegment.firstVehicleInLane(lane);
-
-      if (distanceInNextSegment.isPresent()) {
-        return OptionalInt.of(lanes[lane].length - col - vehicleLength + distanceInNextSegment.getAsInt() + distanceToEndOfSegment);
-      }
-
-      return OptionalInt.empty();
+      throw new IllegalStateException();
+//      if (nextSegment == null) {
+//        return OptionalInt.empty();
+//      }
+//
+//      OptionalInt distanceInNextSegment = nextSegment.firstVehicleInLane(lane);
+//
+//      if (distanceInNextSegment.isPresent()) {
+//        return OptionalInt.of(lanes[lane].length - col - vehicleLength + distanceInNextSegment.getAsInt() + distanceToEndOfSegment);
+//      }
+//
+//      return OptionalInt.empty();
     }
 
     int distanceToEndOfSegmentWithTrafficLight = distanceToEndOfSegment + trafficLight.currentStatus().additionalDistance();
@@ -356,5 +364,9 @@ public final class Road implements Segment {
 
   public void setOnExit(Consumer<Particle> onExit) {
     this.onExit = onExit;
+  }
+
+  public void addVehiclesToBeCreated(int amount) {
+    this.vehiclesToBeCreated += amount;
   }
 }

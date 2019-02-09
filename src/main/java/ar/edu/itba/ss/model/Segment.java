@@ -40,7 +40,7 @@ public interface Segment {
 
   void incomingVehicle(Particle vehicle);
 
-  void randomIncomingVehicle();
+  boolean randomIncomingVehicle();
 
 
   // TODO: Falta un onParticleExit(callback) para avisarle a la union que se fue un auto o una parte de un auto

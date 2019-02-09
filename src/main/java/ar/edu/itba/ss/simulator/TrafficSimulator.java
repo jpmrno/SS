@@ -18,7 +18,7 @@ public class TrafficSimulator implements Simulator {
   private static final int RED_TIME = 7;
   private static final int YELLOW_TIME = 3;
   private static final int GREEN_TIME = 10;
-//  private static final int[] VEHICLES = new int[]{1, 2, 3, 5};
+  //  private static final int[] VEHICLES = new int[]{1, 2, 3, 5};
 //  private static final double[] VEHICLES_PROBABILITY = new double[]{0.1, 0.7, 0.15, 0.05};
   private static final int[] VEHICLES = new int[]{1};
   private static final double[] VEHICLES_PROBABILITY = new double[]{1};
@@ -27,28 +27,29 @@ public class TrafficSimulator implements Simulator {
   private final Road road1;
   private final Road road2;
 
-  public TrafficSimulator(final int nVehicles, final int lanes, final int length, final Map<Integer,Integer> maxVelocities,
-      final double slowDownProbability) {
+  public TrafficSimulator(final int nVehicles, final int lanes, final int length, final Map<Integer, Integer> maxVelocities,
+                          final double slowDownProbability) {
     final TrafficLight trafficLight1 = new TrafficLight(GREEN_TIME, YELLOW_TIME, RED_TIME, Status.RED);
     final TrafficLight trafficLight2 = new TrafficLight(GREEN_TIME, YELLOW_TIME, RED_TIME, Status.RED);
     this.road1 = new Road(lanes, length, TrafficLight.ALWAYS_GREEN, maxVelocities, slowDownProbability, VEHICLES,
             VEHICLES_PROBABILITY, null, null, null);
     this.road2 = new Road(lanes, length, TrafficLight.ALWAYS_GREEN, maxVelocities, slowDownProbability, VEHICLES,
-            VEHICLES_PROBABILITY, road1, road1, p -> {
-      road1.randomIncomingVehicle();
+            VEHICLES_PROBABILITY, road1, null, p -> {
+      if (!road1.randomIncomingVehicle()) {
+        road1.addVehiclesToBeCreated(1);
+      }
     });
     road1.setNextSegment(this.road2);
-    road1.setPreviousSegment(this.road2);
     road1.setOnExit(p -> {
       p = Particle.builder().from(p)
-                  .col(p.col() - length)
-                  .build();
+              .col(p.col() - length)
+              .build();
 
       road2.incomingVehicle(p);
     });
     this.generator = VehicleGenerator.getInstance();
-    generator.generate((Road)this.road1, nVehicles);
-    generator.generate((Road)this.road2, nVehicles);
+    generator.generateInitialVehicles((Road) this.road1, nVehicles);
+    generator.generateInitialVehicles((Road) this.road2, nVehicles);
   }
 
   @Override

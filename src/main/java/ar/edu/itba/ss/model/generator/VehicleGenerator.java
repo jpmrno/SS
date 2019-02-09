@@ -4,10 +4,9 @@ import ar.edu.itba.ss.model.Particle;
 import ar.edu.itba.ss.model.Road;
 import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 
-import java.util.Comparator;
-import java.util.OptionalInt;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static java.lang.Math.min;
@@ -18,43 +17,64 @@ public class VehicleGenerator {
 
   private static final Random RANDOM = ThreadLocalRandom.current();
   private static int LAST_ID = 0;
+  private OptionalInt distanceOptional;
 
   private VehicleGenerator() {
   }
 
   public static VehicleGenerator getInstance() {
-    if(INSTANCE == null){
+    if (INSTANCE == null) {
       INSTANCE = new VehicleGenerator();
     }
     return INSTANCE;
   }
 
-  public void generate(final Road road, int nVehicles) {
-    generateParticles(road, nVehicles, 0, road.lanes(), 0, road.laneLength());
+  public int generateInitialVehicles(final Road road, int nVehicles) {
+    int uninitializedVehicles = generateParticles(road, nVehicles, 0, road.lanes(), 0, road.laneLength(), null);
     updateParticlesWithProperties(road);
+    return uninitializedVehicles;
   }
 
-  public void generate(final Road road, int nVehicles, final int fromRow, final int toRow,
+  public int generate(final Road road, int nVehicles, final int fromRow, final int toRow,
                        final int fromCol, final int toCol) {
-    generateParticles(road, nVehicles, fromRow, toRow, fromCol, toCol);
-    updateParticlesWithProperties(road);
+    Set<Particle> generated = new HashSet<>();
+    int uninitializedVehicles = generateParticles(road, nVehicles, fromRow, toRow, fromCol, toCol, generated);
+    generated.forEach(p -> {
+      updateParticleWithProperties(p, road);
+    });
+    return uninitializedVehicles;
   }
 
-  private void generateParticles(final Road road, final int nVehicles, final int fromRow, final int toRow,
-                                 final int fromCol, final int toCol) {
+  private int generateParticles(final Road road, final int nVehicles, final int fromRow, final int toRow,
+                                          final int fromCol, final int toCol, Set<Particle> generated) {
     int vehicles = 0;
-    while (vehicles != nVehicles) {
-      final int row = RANDOM.nextInt(toRow) + fromRow;
-      final int col = RANDOM.nextInt(toCol) + fromCol;
-      if (road.isValidPosition(row, col, 1)) {
+    List<Integer> rows = IntStream.range(fromRow, toRow).boxed().collect(Collectors.toList());
+    List<Integer> cols = IntStream.range(fromCol, toCol).boxed().collect(Collectors.toList());
+    List<int[]> shuffledPositions = new ArrayList<>();
+    rows.forEach(r -> {
+      cols.forEach(c -> {
+        shuffledPositions.add(new int[]{r, c});
+      });
+    });
+    Collections.shuffle(shuffledPositions);
+
+    for (int[] position : shuffledPositions) {
+      int row = position[0];
+      int col = position[1];
+      if (vehicles < nVehicles && road.isValidPosition(row, col, 1)) {
         vehicles++;
         final Particle particle = Particle.builder()
                 .id(++LAST_ID)
                 .position(row, col)
                 .build();
         road.put(particle);
+        if(generated != null){
+          generated.add(particle);
+        }
       }
     }
+
+    return nVehicles - vehicles;
   }
 
   private void updateParticlesWithProperties(final Road road) {
@@ -73,6 +93,22 @@ public class VehicleGenerator {
           if (otherLength <= distance) {
             putParticleWithProperties(road, particle, distance, otherLength);
           }
+        }
+      }
+    }
+  }
+
+  private void updateParticleWithProperties(final Particle particle, final Road road) {
+    final OptionalInt distanceOptional = road.distanceToNextParticle(particle);
+    final int distance = distanceOptional.getAsInt();
+    int length = getRandomVehicleLength(new EnumeratedIntegerDistribution(road.getVehicleLengths(), road.getVehicleProbabilities()));
+    if (length <= distance) {
+      putParticleWithProperties(road, particle, distance, length);
+    } else {
+      final int[] lengths = previousLengths(length, road.getVehicleLengths());
+      for (final int otherLength : lengths) {
+        if (otherLength <= distance) {
+          putParticleWithProperties(road, particle, distance, length);
         }
       }
     }
