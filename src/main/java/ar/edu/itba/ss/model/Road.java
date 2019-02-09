@@ -144,6 +144,10 @@ public final class Road implements Segment {
     return vehicleGenerator.generate(this, 1, 0, lanes(), 0, 1) != 1;
   }
 
+  public boolean randomVehicle() {
+    return vehicleGenerator.generate(this, 1, 0, lanes(), 0, laneLength()) != 1;
+  }
+
   @Override
   public boolean isValidPosition(final int particleRow, final int particleCol, final int particleLength) {
     if (particleRow < 0 || particleRow >= lanes() || particleCol < 0) {
@@ -248,11 +252,11 @@ public final class Road implements Segment {
 
   private int laneChangeCriteria(final Particle particle, final Either<Particle, ParticleWrapper>[][] roads) {
     //TODO: cambiar el criterio
-    return 0;
-//    if (RANDOM.nextBoolean()) {
-//      return 0;
-//    }
-//    return RANDOM.nextBoolean() ? 1 : -1;
+//    return 0;
+    if (RANDOM.nextBoolean()) {
+      return 0;
+    }
+    return RANDOM.nextBoolean() ? 1 : -1;
   }
 
   private boolean isLaneChangePossible(final Particle vehicle, final int precedingGap, final int successiveGap) {
@@ -266,28 +270,12 @@ public final class Road implements Segment {
 
   private OptionalInt distanceToNextParticle(final int lane, final int col, final int vehicleLength) {
     for (int i = col + vehicleLength; i < lanes[lane].length; i++) {
-      if (isInsideRoad(lane, i) && lanes[lane][i] != null) {
+      if (lanes[lane][i] != null) {
         return OptionalInt.of(i - col - vehicleLength + 1);
       }
     }
 
     int distanceToEndOfSegment = laneLength() - col - vehicleLength + 1;
-
-    if (distanceToEndOfSegment <= 0) {
-      throw new IllegalStateException();
-//      if (nextSegment == null) {
-//        return OptionalInt.empty();
-//      }
-//
-//      OptionalInt distanceInNextSegment = nextSegment.firstVehicleInLane(lane);
-//
-//      if (distanceInNextSegment.isPresent()) {
-//        return OptionalInt.of(lanes[lane].length - col - vehicleLength + distanceInNextSegment.getAsInt() + distanceToEndOfSegment);
-//      }
-//
-//      return OptionalInt.empty();
-    }
-
     int distanceToEndOfSegmentWithTrafficLight = distanceToEndOfSegment + trafficLight.currentStatus().additionalDistance();
 
     if (nextSegment == null) {

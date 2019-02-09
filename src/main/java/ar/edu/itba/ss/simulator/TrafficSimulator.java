@@ -18,38 +18,51 @@ public class TrafficSimulator implements Simulator {
   private static final int RED_TIME = 7;
   private static final int YELLOW_TIME = 3;
   private static final int GREEN_TIME = 10;
-  //  private static final int[] VEHICLES = new int[]{1, 2, 3, 5};
-//  private static final double[] VEHICLES_PROBABILITY = new double[]{0.1, 0.7, 0.15, 0.05};
-  private static final int[] VEHICLES = new int[]{1};
-  private static final double[] VEHICLES_PROBABILITY = new double[]{1};
+    private static final int[] VEHICLES = new int[]{1, 2, 3, 5};
+  private static final double[] VEHICLES_PROBABILITY = new double[]{0.1, 0.7, 0.15, 0.05};
+//  private static final int[] VEHICLES = new int[]{1};
+//  private static final double[] VEHICLES_PROBABILITY = new double[]{1};
   private final VehicleGenerator generator;
 
+  private final Road road0;
   private final Road road1;
   private final Road road2;
 
   public TrafficSimulator(final int nVehicles, final int lanes, final int length, final Map<Integer, Integer> maxVelocities,
                           final double slowDownProbability) {
-    final TrafficLight trafficLight1 = new TrafficLight(GREEN_TIME, YELLOW_TIME, RED_TIME, Status.RED);
-    final TrafficLight trafficLight2 = new TrafficLight(GREEN_TIME, YELLOW_TIME, RED_TIME, Status.RED);
-    this.road1 = new Road(lanes, length, TrafficLight.ALWAYS_GREEN, maxVelocities, slowDownProbability, VEHICLES,
+//    final TrafficLight trafficLight1 = new TrafficLight(GREEN_TIME, YELLOW_TIME, RED_TIME, Status.RED);
+//    final TrafficLight trafficLight2 = new TrafficLight(GREEN_TIME, YELLOW_TIME, RED_TIME, Status.RED);
+    this.road0 = new Road(lanes, length/3, TrafficLight.ALWAYS_GREEN, maxVelocities, slowDownProbability, VEHICLES,
             VEHICLES_PROBABILITY, null, null, null);
+    this.road1 = new Road(lanes, length, TrafficLight.ALWAYS_GREEN, maxVelocities, slowDownProbability, VEHICLES,
+            VEHICLES_PROBABILITY, road0, null, null);
     this.road2 = new Road(lanes, length, TrafficLight.ALWAYS_GREEN, maxVelocities, slowDownProbability, VEHICLES,
             VEHICLES_PROBABILITY, road1, null, p -> {
-      if (!road1.randomIncomingVehicle()) {
-        road1.addVehiclesToBeCreated(1);
+      if (!road0.randomVehicle()) {
+        road0.addVehiclesToBeCreated(1);
       }
     });
+
+
+    road0.setNextSegment(this.road1);
     road1.setNextSegment(this.road2);
     road1.setOnExit(p -> {
       p = Particle.builder().from(p)
-              .col(p.col() - length)
+              .col(p.col() - road1.laneLength())
               .build();
 
       road2.incomingVehicle(p);
     });
+    road0.setOnExit(p -> {
+      p = Particle.builder().from(p)
+              .col(p.col() - road0.laneLength())
+              .build();
+
+      road1.incomingVehicle(p);
+    });
     this.generator = VehicleGenerator.getInstance();
-    generator.generateInitialVehicles((Road) this.road1, nVehicles);
-    generator.generateInitialVehicles((Road) this.road2, nVehicles);
+    generator.generateInitialVehicles(this.road1, nVehicles);
+    generator.generateInitialVehicles(this.road2, nVehicles);
   }
 
   @Override
@@ -58,6 +71,8 @@ public class TrafficSimulator implements Simulator {
     long iteration = 0;
     do {
       // en realidad deberia ser una lista de segmentos
+      road0.setActualized(true);
+      currentParticles = road0.timeLapse();
       road1.setActualized(true);
       currentParticles = road1.timeLapse();
       road2.setActualized(true);
@@ -65,12 +80,25 @@ public class TrafficSimulator implements Simulator {
       road1.setActualized(false);
       road2.setActualized(false);
 
+      Either<Particle, ParticleWrapper>[][] lanes0 = road0.getLanes();
       Either<Particle, ParticleWrapper>[][] lanes1 = road1.getLanes();
       Either<Particle, ParticleWrapper>[][] lanes2 = road2.getLanes();
 
       System.out.println("Iteration " + iteration++);
 
+
+
       for (int row = 0; row < road1.lanes(); row++) {
+        for (int col = 0; col < road0.laneLength(); col++) {
+          if (lanes0[row][col] == null) {
+            System.out.print(".");
+          } else if (lanes0[row][col].isValuePresent()) {
+            System.out.print(lanes0[row][col].getValue().velocity());
+          } else {
+            System.out.print(">");
+          }
+        }
+        System.out.print("|");
         for (int col = 0; col < road1.laneLength(); col++) {
           if (lanes1[row][col] == null) {
             System.out.print(".");
