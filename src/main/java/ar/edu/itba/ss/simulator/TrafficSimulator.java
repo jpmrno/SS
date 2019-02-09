@@ -1,16 +1,16 @@
 package ar.edu.itba.ss.simulator;
 
-import static java.lang.Math.min;
-
 import ar.edu.itba.ss.io.writer.ParticlesWriter;
-import ar.edu.itba.ss.model.*;
-import ar.edu.itba.ss.model.TrafficLight.Status;
+import ar.edu.itba.ss.model.Particle;
+import ar.edu.itba.ss.model.ParticleWrapper;
+import ar.edu.itba.ss.model.Road;
+import ar.edu.itba.ss.model.TrafficLight;
 import ar.edu.itba.ss.model.criteria.Criteria;
-
-import java.util.*;
-
 import ar.edu.itba.ss.model.generator.VehicleGenerator;
 import ar.edu.itba.ss.util.Either;
+
+import java.util.Map;
+import java.util.Set;
 
 public class TrafficSimulator implements Simulator {
 
@@ -44,8 +44,8 @@ public class TrafficSimulator implements Simulator {
     });
 
 
-    road0.setNextSegment(this.road1);
-    road1.setNextSegment(this.road2);
+    road0.setNextRoad(this.road1);
+    road1.setNextRoad(this.road2);
     road1.setOnExit(p -> {
       p = Particle.builder().from(p)
               .col(p.col() - road1.laneLength())
