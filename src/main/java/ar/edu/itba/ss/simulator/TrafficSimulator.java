@@ -10,8 +10,10 @@ import ar.edu.itba.ss.model.generator.VehicleGenerator;
 import ar.edu.itba.ss.util.Either;
 import ar.edu.itba.ss.util.VehicleType;
 
-import java.util.Map;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 public class TrafficSimulator implements Simulator {
 
@@ -29,20 +31,20 @@ public class TrafficSimulator implements Simulator {
   private final Road road1;
   private final Road road2;
 
-  public TrafficSimulator(final int nVehicles, final int lanes, final int length, final Map<Integer, Integer> maxVelocities,
-                          final double slowDownProbability) {
+  public TrafficSimulator(final int nVehicles, final int lanes, final int length, final double slowDownProbability,
+                          BiFunction<Particle, Road, List<Particle>> laneChanger) {
 //    final TrafficLight trafficLight1 = new TrafficLight(GREEN_TIME, YELLOW_TIME, RED_TIME, Status.RED);
 //    final TrafficLight trafficLight2 = new TrafficLight(GREEN_TIME, YELLOW_TIME, RED_TIME, Status.RED);
     this.road0 = new Road(lanes, length / 2, TrafficLight.ALWAYS_GREEN, slowDownProbability, VEHICLES,
-            VEHICLES_PROBABILITY, null, null, null);
+            VEHICLES_PROBABILITY, null, null, null, (v, r) -> Collections.singletonList(v));
     this.road1 = new Road(lanes, length, TrafficLight.ALWAYS_GREEN, slowDownProbability, VEHICLES,
-            VEHICLES_PROBABILITY, road0, null, null);
+            VEHICLES_PROBABILITY, road0, null, null, laneChanger);
     this.road2 = new Road(lanes, length, TrafficLight.ALWAYS_GREEN, slowDownProbability, VEHICLES,
             VEHICLES_PROBABILITY, road1, null, p -> {
       if (!road0.randomVehicle()) {
         road0.addVehiclesToBeCreated(1);
       }
-    });
+    }, laneChanger);
 
 
     road0.setNextRoad(this.road1);

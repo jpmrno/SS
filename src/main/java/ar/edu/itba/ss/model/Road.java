@@ -6,6 +6,7 @@ import ar.edu.itba.ss.util.VehicleType;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import static java.lang.Math.max;
@@ -28,14 +29,16 @@ public final class Road {
   private Consumer<Particle> onExit;
   private final VehicleGenerator vehicleGenerator;
   private int vehiclesToBeCreated = 0;
+  private final BiFunction<Particle, Road, List<Particle>> laneChanger;
 
   public Road(final int lanes, final int length, final TrafficLight trafficLight, final double slowDownProbability,
               VehicleType[] vehicleTypes, double[] vehicleProbabilities, Road prevRoad, Road nextRoad,
-              Consumer<Particle> onExit) {
+              Consumer<Particle> onExit, BiFunction<Particle, Road, List<Particle>> laneChanger) {
     this.trafficLight = trafficLight;
     this.prevRoad = prevRoad;
     this.nextRoad = nextRoad;
     this.onExit = onExit;
+    this.laneChanger = laneChanger;
     this.lanes = new Either[lanes][length];
     this.slowDownProbability = slowDownProbability;
     this.particles = new HashSet<>();
@@ -212,32 +215,14 @@ public final class Road {
   }
 
   private Particle laneChange(final Particle particle) {
-    final int laneChange = laneChangeCriteria(particle, lanes);
-
-    if (laneChange == 0) {
-      return null;
-    }
-
-    final int newLane = particle.row() + laneChange;
-    final Particle newParticle = Particle.builder().from(particle)
-            .row(newLane)
-            .build();
-
-    if (isInsideRoad(newParticle) && isLaneChangePossible(newParticle, newParticle.vehicleType().getMaxVelocity(),
-            newParticle.velocity())) {
-      return newParticle;
+    for (Particle newParticle : laneChanger.apply(particle, this)) {
+      if (isInsideRoad(newParticle) && isLaneChangePossible(newParticle, newParticle.vehicleType().getMaxVelocity(),
+              newParticle.velocity())) {
+        return newParticle;
+      }
     }
 
     return null;
-  }
-
-  private int laneChangeCriteria(final Particle particle, final Either<Particle, ParticleWrapper>[][] roads) {
-//    TODO: cambiar el criterio
-//    return 0;
-    if (RANDOM.nextBoolean()) {
-      return 0;
-    }
-    return RANDOM.nextBoolean() ? 1 : -1;
   }
 
   private boolean isLaneChangePossible(final Particle vehicle, final int precedingGap, final int successiveGap) {
@@ -249,7 +234,7 @@ public final class Road {
             && successiveDistance.orElse(Integer.MAX_VALUE) >= successiveGap;
   }
 
-  private OptionalInt distanceToNextParticle(final int lane, final int col, final VehicleType type) {
+  public OptionalInt distanceToNextParticle(final int lane, final int col, final VehicleType type) {
     for (int i = col + type.getLength(); i < lanes[lane].length; i++) {
       if (lanes[lane][i] != null) {
         return OptionalInt.of(i - col - type.getLength() + 1);

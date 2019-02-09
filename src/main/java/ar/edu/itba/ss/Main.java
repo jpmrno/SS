@@ -2,28 +2,26 @@ package ar.edu.itba.ss;
 
 import ar.edu.itba.ss.model.Particle;
 import ar.edu.itba.ss.model.ParticleWrapper;
+import ar.edu.itba.ss.model.Road;
+import ar.edu.itba.ss.model.Tendency;
 import ar.edu.itba.ss.simulator.TrafficSimulator;
 import ar.edu.itba.ss.util.Either;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+import java.util.function.BiFunction;
 
 public class Main {
 
   private static final int N_VEHICLES = 40;
   private static final int LANES = 5;
   private static final int LANES_LENGTH = 60;
-  private static final int V_MAX = 6;
   private static final double SLOW_DOWN_P = 0.0;
+  private static final BiFunction<Particle, Road, List<Particle>> LANE_CHANGER =
+          new Tendency(0.3)::tendencyToAnywhere;
 
   public static void main(final String[] args) {
-    final Map<Integer,Integer> maxVelocities = new HashMap();
-    for (int lane = 0; lane < LANES; lane++) {
-      maxVelocities.put(lane, V_MAX);
-    }
 
-
-    final TrafficSimulator simulator = new TrafficSimulator(N_VEHICLES, LANES, LANES_LENGTH, maxVelocities, SLOW_DOWN_P);
+    final TrafficSimulator simulator = new TrafficSimulator(N_VEHICLES, LANES, LANES_LENGTH, SLOW_DOWN_P, LANE_CHANGER);
     simulator.simulate((i, p) -> p.isEmpty(), (it, m, p) -> {
       System.out.println("Iteration: " + it);
       for (int i = 0; i < m.length; i++) {

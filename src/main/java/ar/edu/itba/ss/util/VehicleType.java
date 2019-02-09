@@ -3,7 +3,7 @@ package ar.edu.itba.ss.util;
 public enum VehicleType {
   MOTORCYCLE(1, 8),
   CAR(2, 6),
-  TRUCK(4, 4),
+  TRUCK(4, 3),
   LIGHT(0,1000)
   ;
 
