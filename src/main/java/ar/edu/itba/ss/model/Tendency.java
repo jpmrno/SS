@@ -1,13 +1,9 @@
 package ar.edu.itba.ss.model;
 
-import ar.edu.itba.ss.model.Particle;
-import ar.edu.itba.ss.model.Road;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.BiFunction;
 
 public class Tendency {
 
@@ -34,7 +30,7 @@ public class Tendency {
     final Particle toLeft = toLeft(vehicle, road);
     final Particle toRight = toRight(vehicle, road);
 
-    if(RANDOM.nextBoolean()){
+    if (RANDOM.nextBoolean()) {
       if (toLeft != null) {
         ret.add(toLeft);
       }
@@ -55,13 +51,13 @@ public class Tendency {
 
   private Particle toLeft(Particle vehicle, Road road) {
     if (vehicle.row() > 0) {
-      final int distanceToNextVehicle = road.distanceToNextParticle(vehicle).orElse(vehicle.vehicleType().getMaxVelocity());
-      final int distanceToNextVehicleLeft = road.distanceToNextParticle(vehicle.row() - 1, vehicle.col(), vehicle.vehicleType())
-              .orElse(vehicle.vehicleType().getMaxVelocity());
+      final int distanceToNextVehicle = road.distanceToNextParticle(vehicle).orElse(vehicle.maxVelocity());
+      final int distanceToNextVehicleLeft = road.distanceToNextParticle(vehicle.row() - 1, vehicle.col(), vehicle.length())
+          .orElse(vehicle.maxVelocity());
       if (distanceToNextVehicle < vehicle.velocity() + 1 && distanceToNextVehicleLeft >= vehicle.velocity() + 1) {
         return Particle.builder().from(vehicle)
-                .row(vehicle.row() - 1)
-                .build();
+            .row(vehicle.row() - 1)
+            .build();
       }
     }
     return null;
@@ -69,13 +65,13 @@ public class Tendency {
 
   private Particle toRight(Particle vehicle, Road road) {
     if (vehicle.row() < road.lanes() - 1) {
-      final int distanceToNextVehicle = road.distanceToNextParticle(vehicle).orElse(vehicle.vehicleType().getMaxVelocity());
-      final int distanceToNextVehicleLeft = road.distanceToNextParticle(vehicle.row() + 1, vehicle.col(), vehicle.vehicleType())
-              .orElse(vehicle.vehicleType().getMaxVelocity());
+      final int distanceToNextVehicle = road.distanceToNextParticle(vehicle).orElse(vehicle.maxVelocity());
+      final int distanceToNextVehicleLeft =
+          road.distanceToNextParticle(vehicle.row() + 1, vehicle.col(), vehicle.length()).orElse(vehicle.maxVelocity());
       if (distanceToNextVehicle < vehicle.velocity() + 1 && distanceToNextVehicleLeft >= vehicle.velocity() + 1) {
         return Particle.builder().from(vehicle)
-                .row(vehicle.row() + 1)
-                .build();
+            .row(vehicle.row() + 1)
+            .build();
       }
     }
     return null;
@@ -84,8 +80,8 @@ public class Tendency {
   private List<Particle> addRandomMovement(Particle vehicle, List<Particle> changes) {
     if (RANDOM.nextDouble() <= randomLaneChangeProbability) {
       changes.add(Particle.builder().from(vehicle)
-              .row(vehicle.row() + (RANDOM.nextBoolean() ? 1 : -1))
-              .build());
+          .row(vehicle.row() + (RANDOM.nextBoolean() ? 1 : -1))
+          .build());
     }
 
     return changes;

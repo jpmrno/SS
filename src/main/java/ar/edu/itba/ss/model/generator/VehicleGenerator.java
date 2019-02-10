@@ -3,49 +3,62 @@ package ar.edu.itba.ss.model.generator;
 import ar.edu.itba.ss.model.Particle;
 import ar.edu.itba.ss.model.Road;
 import ar.edu.itba.ss.util.VehicleType;
-import org.apache.commons.math3.distribution.EnumeratedDistribution;
-import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
-import org.apache.commons.math3.util.Pair;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.OptionalInt;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import static java.lang.Math.min;
+import org.apache.commons.math3.distribution.EnumeratedDistribution;
+import org.apache.commons.math3.distribution.NormalDistribution;
+import org.apache.commons.math3.util.Pair;
 
 public class VehicleGenerator {
 
-  private static VehicleGenerator INSTANCE = null;
-
-  private static final Random RANDOM = ThreadLocalRandom.current();
   private static int LAST_ID = 0;
 
-  private VehicleGenerator() {
+  private final Random random = ThreadLocalRandom.current();
+  private final ToIntFunction<VehicleType> maxVelocityFunction;
+
+  private VehicleGenerator(final ToIntFunction<VehicleType> maxVelocityFunction) {
+    this.maxVelocityFunction = maxVelocityFunction;
   }
 
-  public static VehicleGenerator getInstance() {
-    if (INSTANCE == null) {
-      INSTANCE = new VehicleGenerator();
-    }
-    return INSTANCE;
+  public static VehicleGenerator simpleMaxVelocity(final int maxVelocity) {
+    return new VehicleGenerator(pt -> maxVelocity);
+  }
+
+  public static VehicleGenerator simpleMaxVelocity(final int maxVelocity, final double sigma) {
+    final NormalDistribution normalDistribution = new NormalDistribution(0, sigma * sigma);
+    return new VehicleGenerator(pt -> (int) (maxVelocity * normalDistribution.sample()));
+  }
+
+  public static VehicleGenerator perTypeMaxVelocity() {
+    return new VehicleGenerator(VehicleType::maxVelocity);
+  }
+
+  public static VehicleGenerator perTypeMaxVelocity(final double sigma) {
+    final NormalDistribution normalDistribution = new NormalDistribution(0, sigma * sigma);
+    return new VehicleGenerator(pt -> (int) (pt.maxVelocity() * normalDistribution.sample()));
   }
 
   public int generateInitialVehicles(final Road road, int nVehicles) {
-    int uninitializedVehicles = generateParticles(road, nVehicles, 0, road.lanes(), 0, road.laneLength(), null);
-    for (Particle vehicle : road.particles()) {
-      updateParticleWithProperties(vehicle, road);
-    }
+    int uninitializedVehicles = generateParticles(road, nVehicles, 0, road.lanes(), 0, road.laneLength(),
+        null);
+    road.particles().forEach(vehicle -> updateParticleWithProperties(vehicle, road));
     return uninitializedVehicles;
   }
 
-  public int generate(final Road road, int nVehicles, final int fromRow, final int toRow,
-                      final int fromCol, final int toCol) {
-    Set<Particle> generated = new HashSet<>();
-    int uninitializedVehicles = generateParticles(road, nVehicles, fromRow, toRow, fromCol, toCol, generated);
-    generated.forEach(p -> {
-      updateParticleWithProperties(p, road);
-    });
+  public int generate(final Road road, int nVehicles, final int fromRow, final int toRow, final int fromCol, final int toCol) {
+    final Set<Particle> generated = new HashSet<>();
+    final int uninitializedVehicles = generateParticles(road, nVehicles, fromRow, toRow, fromCol, toCol, generated);
+    generated.forEach(p -> updateParticleWithProperties(p, road));
     return uninitializedVehicles;
   }
 
@@ -68,9 +81,9 @@ public class VehicleGenerator {
       if (vehicles < nVehicles && road.isValidPosition(row, col, 1)) {
         vehicles++;
         final Particle particle = Particle.builder()
-                .id(++LAST_ID)
-                .position(row, col)
-                .build();
+            .id(++LAST_ID)
+            .position(row, col)
+            .build();
         road.put(particle);
         if (generated != null) {
           generated.add(particle);
@@ -92,12 +105,12 @@ public class VehicleGenerator {
 
     VehicleType type = getRandomVehicleType(new EnumeratedDistribution(pairs));
 
-    if (type.getLength() <= distance) {
+    if (type.length() <= distance) {
       putParticleWithProperties(road, particle, type);
     } else {
-      final List<VehicleType> types = previousLengths(type.getLength(), road.getVehicleTypes());
+      final List<VehicleType> types = previousLengths(type.length(), road.getVehicleTypes());
       for (final VehicleType otherType : types) {
-        if (otherType.getLength() <= distance) {
+        if (otherType.length() <= distance) {
           putParticleWithProperties(road, particle, otherType);
           return;
         }
@@ -106,10 +119,12 @@ public class VehicleGenerator {
   }
 
   private void putParticleWithProperties(final Road road, final Particle particle, final VehicleType type) {
+    final int maxV = maxVelocityFunction.applyAsInt(type);
     final Particle newParticle = Particle.builder().from(particle)
-            .velocity(RANDOM.nextInt(type.getMaxVelocity() + 1))
-            .vehicleType(type)
-            .build();
+        .maxVelocity(maxV)
+        .velocity(random.nextInt(maxV + 1))
+        .vehicleType(type)
+        .build();
     road.replace(particle, newParticle);
   }
 
@@ -119,8 +134,8 @@ public class VehicleGenerator {
 
   private static List<VehicleType> previousLengths(final int lastLength, VehicleType[] vehicleTypes) {
     return Arrays.stream(vehicleTypes)
-            .sorted((o1, o2) -> o2.getLength() - o1.getLength())
-            .filter(v -> v.getLength() < lastLength)
-            .collect(Collectors.toList());
+        .sorted((o1, o2) -> o2.length() - o1.length())
+        .filter(v -> v.length() < lastLength)
+        .collect(Collectors.toList());
   }
 }
