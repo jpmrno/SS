@@ -17,7 +17,7 @@ public class Main {
   private static final double SLOW_DOWN_P = 0.0;
   private static final BiFunction<Particle, Road, List<Particle>> LANE_CHANGER =
       new Tendency(0.3)::tendencyToAnywhere;
-  private static final VehicleGenerator VEHICLE_GENERATOR = VehicleGenerator.perTypeMaxVelocity();
+  private static final VehicleGenerator VEHICLE_GENERATOR = VehicleGenerator.perTypeMaxVelocity(1);
 
   public static void main(final String[] args) {
     final TrafficSimulator simulator =

@@ -39,8 +39,6 @@ public class TrafficSimulator implements Simulator {
     this.road1 = new Road(lanes, length, TrafficLight.ALWAYS_GREEN, slowDownProbability, VEHICLES,
             VEHICLES_PROBABILITY, null, null, null, laneChanger, vehicleGenerator);
 
-
-//    road0.setNextRoad(this.road1);
     road1.setNextRoad(this.road1);
     road1.setPreviousRoad(this.road1);
     road1.setOnExit(p -> {
@@ -63,8 +61,6 @@ public class TrafficSimulator implements Simulator {
       road1.setActualized(true);
       road1.timeLapse();
 
-//      road0.setActualized(false);
-//      road0.moveVehicles();
       road1.setActualized(false);
       currentParticles = road1.moveVehicles();
 
