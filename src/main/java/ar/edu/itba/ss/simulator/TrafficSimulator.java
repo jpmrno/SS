@@ -10,6 +10,8 @@ import ar.edu.itba.ss.model.generator.VehicleGenerator;
 import ar.edu.itba.ss.util.Either;
 import ar.edu.itba.ss.util.VehicleType;
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -90,7 +92,12 @@ public class TrafficSimulator implements Simulator {
 
       System.out.println("Iteration " + iteration++);
 
-
+      try {
+        writer.write(iteration, Arrays.asList(road0, road1, road2));
+      } catch (IOException e) {
+        e.printStackTrace();
+        System.exit(1);
+      }
       for (int row = 0; row < road1.lanes(); row++) {
         for (int col = 0; col < road0.laneLength(); col++) {
           if (lanes0[row][col] == null) {
