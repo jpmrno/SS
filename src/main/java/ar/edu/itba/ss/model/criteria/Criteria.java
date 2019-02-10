@@ -5,5 +5,5 @@ import java.util.Collection;
 
 public interface Criteria {
 
-  boolean test(final long interation, final Collection<Particle> particles);
+  boolean test(final long iteration, final Collection<Particle> particles);
 }
