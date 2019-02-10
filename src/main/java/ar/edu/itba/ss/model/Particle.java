@@ -12,7 +12,10 @@ public abstract class Particle {
 
   public abstract int col();
 
-  public abstract int maxVelocity();
+  @Value.Default
+  public int maxVelocity() {
+    return Integer.MIN_VALUE;
+  }
 
   @Value.Default
   public int velocity() {
@@ -22,6 +25,11 @@ public abstract class Particle {
   @Value.Default
   public VehicleType vehicleType() {
     return VehicleType.MOTORCYCLE;
+  }
+
+  @Value.Derived
+  public int length() {
+    return vehicleType().length();
   }
 
   public static Builder builder() {

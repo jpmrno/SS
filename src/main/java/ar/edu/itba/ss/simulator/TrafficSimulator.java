@@ -9,8 +9,6 @@ import ar.edu.itba.ss.model.criteria.Criteria;
 import ar.edu.itba.ss.model.generator.VehicleGenerator;
 import ar.edu.itba.ss.util.Either;
 import ar.edu.itba.ss.util.VehicleType;
-import org.apache.commons.math3.distribution.NormalDistribution;
-import org.apache.commons.math3.random.GaussianRandomGenerator;
 
 import java.util.Collections;
 import java.util.List;
@@ -27,28 +25,27 @@ public class TrafficSimulator implements Simulator {
   private static final double[] VEHICLES_PROBABILITY = new double[]{0.1, 0.8, 0.1};
   //  private static final VehicleType[] VEHICLES = new VehicleType[]{VehicleType.MOTORCYCLE};
 //  private static final double[] VEHICLES_PROBABILITY = new double[]{1};
-  private final VehicleGenerator generator;
+  private final VehicleGenerator vehicleGenerator;
 
   private final Road road0;
   private final Road road1;
   private final Road road2;
 
   public TrafficSimulator(final int nVehicles, final int lanes, final int length, final double slowDownProbability,
-                          BiFunction<Particle, Road, List<Particle>> laneChanger, final double sigma) {
+                          BiFunction<Particle, Road, List<Particle>> laneChanger, final VehicleGenerator vehicleGenerator) {
 //    final TrafficLight trafficLight1 = new TrafficLight(GREEN_TIME, YELLOW_TIME, RED_TIME, Status.RED);
 //    final TrafficLight trafficLight2 = new TrafficLight(GREEN_TIME, YELLOW_TIME, RED_TIME, Status.RED);
-    NormalDistribution distribution = new NormalDistribution(0, sigma * sigma);
-    distribution.sample();
+    this.vehicleGenerator = vehicleGenerator;
     this.road0 = new Road(lanes, length / 2, TrafficLight.ALWAYS_GREEN, slowDownProbability, VEHICLES,
-            VEHICLES_PROBABILITY, null, null, null, (v, r) -> Collections.singletonList(v));
+            VEHICLES_PROBABILITY, null, null, null, (v, r) -> Collections.singletonList(v), vehicleGenerator);
     this.road1 = new Road(lanes, length, TrafficLight.ALWAYS_GREEN, slowDownProbability, VEHICLES,
-            VEHICLES_PROBABILITY, road0, null, null, laneChanger);
+            VEHICLES_PROBABILITY, road0, null, null, laneChanger, vehicleGenerator);
     this.road2 = new Road(lanes, length, TrafficLight.ALWAYS_GREEN, slowDownProbability, VEHICLES,
             VEHICLES_PROBABILITY, road1, null, p -> {
       if (!road0.randomVehicle()) {
         road0.addVehiclesToBeCreated(1);
       }
-    }, laneChanger);
+    }, laneChanger, vehicleGenerator);
 
 
     road0.setNextRoad(this.road1);
@@ -67,10 +64,9 @@ public class TrafficSimulator implements Simulator {
 
       road1.incomingVehicle(p);
     });
-    this.generator = VehicleGenerator.getInstance();
     //TODO: hacer bien la funcion
-    generator.generateInitialVehicles(this.road1, nVehicles, v -> v.getMaxVelocity());
-    generator.generateInitialVehicles(this.road2, nVehicles, v -> v.getMaxVelocity());
+    this.vehicleGenerator.generateInitialVehicles(this.road1, nVehicles);
+    this.vehicleGenerator.generateInitialVehicles(this.road2, nVehicles);
   }
 
   @Override

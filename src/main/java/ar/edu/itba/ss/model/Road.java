@@ -1,16 +1,20 @@
 package ar.edu.itba.ss.model;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 import ar.edu.itba.ss.model.generator.VehicleGenerator;
 import ar.edu.itba.ss.util.Either;
 import ar.edu.itba.ss.util.VehicleType;
-
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.OptionalInt;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
-
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 
 public final class Road {
 
@@ -33,7 +37,8 @@ public final class Road {
 
   public Road(final int lanes, final int length, final TrafficLight trafficLight, final double slowDownProbability,
               VehicleType[] vehicleTypes, double[] vehicleProbabilities, Road prevRoad, Road nextRoad,
-              Consumer<Particle> onExit, BiFunction<Particle, Road, List<Particle>> laneChanger) {
+              Consumer<Particle> onExit, BiFunction<Particle, Road, List<Particle>> laneChanger,
+              final VehicleGenerator vehicleGenerator) {
     this.trafficLight = trafficLight;
     this.prevRoad = prevRoad;
     this.nextRoad = nextRoad;
@@ -45,7 +50,7 @@ public final class Road {
     this.alreadyMoved = new HashSet<>();
     this.vehicleTypes = vehicleTypes;
     this.vehicleProbabilities = vehicleProbabilities;
-    this.vehicleGenerator = VehicleGenerator.getInstance();
+    this.vehicleGenerator = vehicleGenerator;
   }
 
   public int lanes() {
@@ -78,7 +83,7 @@ public final class Road {
       throw new IllegalStateException("Crash at: " + particle.row() + " - " + particle.col());
     }
     lanes[particle.row()][particle.col()] = Either.value(particle);
-    for (int i = particle.col() + 1; i < lanes[0].length && i < particle.col() + particle.vehicleType().getLength(); i++) {
+    for (int i = particle.col() + 1; i < lanes[0].length && i < particle.col() + particle.vehicleType().length(); i++) {
       if (lanes[particle.row()][i] != null) {
         throw new IllegalStateException("Crash at: " + particle.row() + " - " + i);
       }
@@ -90,7 +95,7 @@ public final class Road {
   private void remove(final Particle particle) {
     if (particles.contains(particle)) {
       if (isInsideRoad(particle.row(), particle.col())) {
-        for (int i = particle.col(); i < laneLength() && i < particle.col() + particle.vehicleType().getLength(); i++) {
+        for (int i = particle.col(); i < laneLength() && i < particle.col() + particle.vehicleType().length(); i++) {
           lanes[particle.row()][i] = null;
         }
       }
@@ -106,11 +111,11 @@ public final class Road {
   }
 
   public boolean isValidPosition(final Particle particle) {
-    return isValidPosition(particle.row(), particle.col(), particle.vehicleType().getLength());
+    return isValidPosition(particle.row(), particle.col(), particle.vehicleType().length());
   }
 
   public OptionalInt firstVehicleInLane(int lane) {
-    return distanceToNextParticle(lane, 0, VehicleType.LIGHT);
+    return distanceToNextParticle(lane, 0, 0);
   }
 
   public OptionalInt lastVehicleInLane(int lane) {
@@ -126,13 +131,11 @@ public final class Road {
   }
 
   public boolean randomIncomingVehicle() {
-    return vehicleGenerator.generate(this, 1, 0, lanes(),
-            0, 1) != 1;
+    return vehicleGenerator.generate(this, 1, 0, lanes(), 0, 1) != 1;
   }
 
   public boolean randomVehicle() {
-    return vehicleGenerator.generate(this, 1, 0, lanes(),
-            0, laneLength()) != 1;
+    return vehicleGenerator.generate(this, 1, 0, lanes(), 0, laneLength()) != 1;
   }
 
   public boolean isValidPosition(final int particleRow, final int particleCol, final int particleLength) {
@@ -168,12 +171,12 @@ public final class Road {
     for (final Particle particle : particles()) {
       if (!alreadyMoved.contains(particle)) {
         final OptionalInt distance = distanceToNextParticle(particle);
-        final int newVelocity = velocity(particle, distance.orElse(particle.vehicleType().getMaxVelocity()));
+        final int newVelocity = velocity(particle, distance.orElse(particle.maxVelocity()));
         final int[] newPosition = moveForward(particle, newVelocity);
         final Particle newParticle = Particle.builder().from(particle)
-                .velocity(newVelocity)
-                .position(newPosition[0], newPosition[1])
-                .build();
+            .velocity(newVelocity)
+            .position(newPosition[0], newPosition[1])
+            .build();
 
         newParticles.add(new Particle[]{particle, newParticle});
 
@@ -203,7 +206,7 @@ public final class Road {
   }
 
   private int velocity(final Particle particle, final int distance) {
-    int velocity = min(particle.velocity() + 1, particle.vehicleType().getMaxVelocity());
+    int velocity = min(particle.velocity() + 1, particle.maxVelocity());
     velocity = min(distance - 1, velocity);
     if (RANDOM.nextDouble() <= slowDownProbability && velocity > 1) {
       velocity = max(0, velocity - 1);
@@ -218,8 +221,8 @@ public final class Road {
 
   private Particle laneChange(final Particle particle) {
     for (Particle newParticle : laneChanger.apply(particle, this)) {
-      if (isInsideRoad(newParticle) && isLaneChangePossible(newParticle, newParticle.vehicleType().getMaxVelocity(),
-              newParticle.velocity())) {
+      if (isInsideRoad(newParticle) && isLaneChangePossible(newParticle, newParticle.maxVelocity(),
+          newParticle.velocity())) {
         return newParticle;
       }
     }
@@ -231,31 +234,32 @@ public final class Road {
     final OptionalInt precedingDistance = distanceToPreviousParticle(vehicle);
     final OptionalInt successiveDistance = distanceToNextParticle(vehicle);
 
-    return !overlaps(vehicle.row(), vehicle.col(), vehicle.vehicleType())
-            && precedingDistance.orElse(Integer.MAX_VALUE) >= precedingGap
-            && successiveDistance.orElse(Integer.MAX_VALUE) >= successiveGap;
+    return !overlaps(vehicle.row(), vehicle.col(), vehicle)
+        && precedingDistance.orElse(Integer.MAX_VALUE) >= precedingGap
+        && successiveDistance.orElse(Integer.MAX_VALUE) >= successiveGap;
   }
 
-  public OptionalInt distanceToNextParticle(final int lane, final int col, final VehicleType type) {
-    for (int i = col + type.getLength(); i < lanes[lane].length; i++) {
+  public OptionalInt distanceToNextParticle(final int lane, final int col, final int length) {
+    for (int i = col + length; i < lanes[lane].length; i++) {
       if (lanes[lane][i] != null) {
-        return OptionalInt.of(i - col - type.getLength() + 1);
+        return OptionalInt.of(i - col - length + 1);
       }
     }
 
-    int distanceToEndOfSegment = laneLength() - col - type.getLength() + 1;
-    int distanceToEndOfSegmentWithTrafficLight = distanceToEndOfSegment + trafficLight.currentStatus().additionalDistance();
+    int distanceToEndOfSegment = laneLength() - col - length + 1;
+    int distanceToEndOfSegmentWithTrafficLight =
+        distanceToEndOfSegment + trafficLight.currentStatus().additionalDistance();
 
     if (nextRoad == null) {
       return OptionalInt.of(distanceToEndOfSegmentWithTrafficLight);
     }
 
     return OptionalInt.of(Math.min(distanceToEndOfSegmentWithTrafficLight,
-            distanceToEndOfSegment - 1 + nextRoad.firstVehicleInLane(lane).orElse(type.getMaxVelocity())));
+        distanceToEndOfSegment - 1 + nextRoad.firstVehicleInLane(lane).orElse(Integer.MAX_VALUE)));
   }
 
   public OptionalInt distanceToNextParticle(final Particle particle) {
-    return distanceToNextParticle(particle.row(), particle.col(), particle.vehicleType());
+    return distanceToNextParticle(particle.row(), particle.col(), particle.length());
 
   }
 
@@ -283,23 +287,24 @@ public final class Road {
     return distanceToPreviousParticle(particle.row(), particle.col());
   }
 
-  private boolean overlaps(final int fromRow,
-                           final int fromCol, final VehicleType type) {
+  private boolean overlaps(final int fromRow, final int fromCol, final Particle particle) {
+    final VehicleType vehicleType = particle.vehicleType();
 
-    if (fromCol < 0 && prevRoad != null && lastVehicleInLane(fromRow).orElse(type.getMaxVelocity()) <= -fromCol) {
+    if (fromCol < 0 && prevRoad != null && lastVehicleInLane(fromRow).orElse(particle.maxVelocity()) <= -fromCol) {
       return true;
     }
 
-    if (fromCol + type.getLength() - 1 >= laneLength() && nextRoad != null
-            && firstVehicleInLane(fromRow).orElse(type.getMaxVelocity()) <= laneLength() - fromCol - type.getLength()) {
+    if (fromCol + vehicleType.length() - 1 >= laneLength() && nextRoad != null
+        && firstVehicleInLane(fromRow).orElse(particle.maxVelocity()) <= laneLength() - fromCol - vehicleType.length()) {
       return true;
     }
 
-    for (int col = max(fromCol, 0); col < fromCol + type.getLength() && col < lanes[0].length; col++) {
+    for (int col = max(fromCol, 0); col < fromCol + vehicleType.length() && col < lanes[0].length; col++) {
       if (lanes[fromRow][col] != null) {
         return true;
       }
     }
+
     return false;
   }
 
