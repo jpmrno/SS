@@ -6,6 +6,7 @@ import static java.lang.Math.min;
 import ar.edu.itba.ss.model.generator.VehicleGenerator;
 import ar.edu.itba.ss.util.Either;
 import ar.edu.itba.ss.util.VehicleType;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -34,6 +35,7 @@ public final class Road {
   private final VehicleGenerator vehicleGenerator;
   private int vehiclesToBeCreated = 0;
   private final BiFunction<Particle, Road, List<Particle>> laneChanger;
+  private final Set<Particle[]> newParticles;
 
   public Road(final int lanes, final int length, final TrafficLight trafficLight, final double slowDownProbability,
               VehicleType[] vehicleTypes, double[] vehicleProbabilities, Road prevRoad, Road nextRoad,
@@ -51,6 +53,7 @@ public final class Road {
     this.vehicleTypes = vehicleTypes;
     this.vehicleProbabilities = vehicleProbabilities;
     this.vehicleGenerator = vehicleGenerator;
+    this.newParticles = new HashSet<>();
   }
 
   public int lanes() {
@@ -151,7 +154,7 @@ public final class Road {
     return true;
   }
 
-  public Set<Particle> timeLapse() {
+  public void timeLapse() {
     // traffic light
     trafficLight.timeLapse();
 
@@ -165,8 +168,6 @@ public final class Road {
       }
     }
 
-    Set<Particle[]> newParticles = new HashSet<>();
-
     // perform NaSch rules
     for (final Particle particle : particles()) {
       if (!alreadyMoved.contains(particle)) {
@@ -174,9 +175,9 @@ public final class Road {
         final int newVelocity = velocity(particle, distance.orElse(particle.maxVelocity()));
         final int[] newPosition = moveForward(particle, newVelocity);
         final Particle newParticle = Particle.builder().from(particle)
-            .velocity(newVelocity)
-            .position(newPosition[0], newPosition[1])
-            .build();
+                .velocity(newVelocity)
+                .position(newPosition[0], newPosition[1])
+                .build();
 
         newParticles.add(new Particle[]{particle, newParticle});
 
@@ -185,8 +186,11 @@ public final class Road {
         }
       }
     }
+  }
 
+  public Set<Particle> moveVehicles() {
     newParticles.forEach(p -> replace(p[0], p[1]));
+    newParticles.clear();
 
     alreadyMoved.clear();
 
@@ -222,7 +226,7 @@ public final class Road {
   private Particle laneChange(final Particle particle) {
     for (Particle newParticle : laneChanger.apply(particle, this)) {
       if (isInsideRoad(newParticle) && isLaneChangePossible(newParticle, newParticle.maxVelocity(),
-          newParticle.velocity())) {
+              newParticle.velocity())) {
         return newParticle;
       }
     }
@@ -235,8 +239,8 @@ public final class Road {
     final OptionalInt successiveDistance = distanceToNextParticle(vehicle);
 
     return !overlaps(vehicle.row(), vehicle.col(), vehicle)
-        && precedingDistance.orElse(Integer.MAX_VALUE) >= precedingGap
-        && successiveDistance.orElse(Integer.MAX_VALUE) >= successiveGap;
+            && precedingDistance.orElse(Integer.MAX_VALUE) >= precedingGap
+            && successiveDistance.orElse(Integer.MAX_VALUE) >= successiveGap;
   }
 
   public OptionalInt distanceToNextParticle(final int lane, final int col, final int length) {
@@ -248,14 +252,14 @@ public final class Road {
 
     int distanceToEndOfSegment = laneLength() - col - length + 1;
     int distanceToEndOfSegmentWithTrafficLight =
-        distanceToEndOfSegment + trafficLight.currentStatus().additionalDistance();
+            distanceToEndOfSegment + trafficLight.currentStatus().additionalDistance();
 
     if (nextRoad == null) {
       return OptionalInt.of(distanceToEndOfSegmentWithTrafficLight);
     }
 
     return OptionalInt.of(Math.min(distanceToEndOfSegmentWithTrafficLight,
-        distanceToEndOfSegment - 1 + nextRoad.firstVehicleInLane(lane).orElse(Integer.MAX_VALUE)));
+            distanceToEndOfSegment - 1 + nextRoad.firstVehicleInLane(lane).orElse(Integer.MAX_VALUE)));
   }
 
   public OptionalInt distanceToNextParticle(final Particle particle) {
@@ -295,7 +299,7 @@ public final class Road {
     }
 
     if (fromCol + vehicleType.length() - 1 >= laneLength() && nextRoad != null
-        && firstVehicleInLane(fromRow).orElse(particle.maxVelocity()) <= laneLength() - fromCol - vehicleType.length()) {
+            && firstVehicleInLane(fromRow).orElse(particle.maxVelocity()) <= laneLength() - fromCol - vehicleType.length()) {
       return true;
     }
 

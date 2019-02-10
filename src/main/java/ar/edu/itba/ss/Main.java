@@ -11,13 +11,13 @@ import java.util.function.BiFunction;
 
 public class Main {
 
-  private static final int N_VEHICLES = 40;
+  private static final int N_VEHICLES = 80;
   private static final int LANES = 5;
-  private static final int LANES_LENGTH = 60;
+  private static final int LANES_LENGTH = 150;
   private static final double SLOW_DOWN_P = 0.0;
   private static final BiFunction<Particle, Road, List<Particle>> LANE_CHANGER =
       new Tendency(0.3)::tendencyToAnywhere;
-  private static final VehicleGenerator VEHICLE_GENERATOR = VehicleGenerator.perTypeMaxVelocity(1.0);
+  private static final VehicleGenerator VEHICLE_GENERATOR = VehicleGenerator.perTypeMaxVelocity();
 
   public static void main(final String[] args) {
     final TrafficSimulator simulator =
