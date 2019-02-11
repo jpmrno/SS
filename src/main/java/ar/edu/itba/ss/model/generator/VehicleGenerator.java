@@ -52,11 +52,11 @@ public class VehicleGenerator {
 
     double factor;
     if(sample < 0.33){
-      factor = 0.5;
+      factor = 1;
     } else if (sample < 0.66){
       factor = 0.75;
     } else {
-      factor = 1;
+      factor = 0.5;
     }
 
     return new VehicleGenerator(pt -> (int) (pt.maxVelocity() * factor));

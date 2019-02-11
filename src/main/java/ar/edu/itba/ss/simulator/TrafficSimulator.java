@@ -11,10 +11,7 @@ import ar.edu.itba.ss.util.Either;
 import ar.edu.itba.ss.util.VehicleType;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiFunction;
 
 public class TrafficSimulator implements Simulator {
@@ -31,12 +28,18 @@ public class TrafficSimulator implements Simulator {
 
   private final Road road1;
 
+  private List<Double> meanV;
+
   public TrafficSimulator(final int nVehicles, final int lanes, final int length, final double slowDownProbability,
                           BiFunction<Particle, Road, List<Particle>> laneChanger, final VehicleGenerator vehicleGenerator) {
 //    final TrafficLight trafficLight1 = new TrafficLight(GREEN_TIME, YELLOW_TIME, RED_TIME, Status.RED);
 //    final TrafficLight trafficLight2 = new TrafficLight(GREEN_TIME, YELLOW_TIME, RED_TIME, Status.RED);
+    TrafficLight[] trafficLights = new TrafficLight[lanes];
+    for (int i = 0; i < trafficLights.length; i++) {
+      trafficLights[i] = TrafficLight.ALWAYS_GREEN;
+    }
     this.vehicleGenerator = vehicleGenerator;
-    this.road1 = new Road(lanes, length, TrafficLight.ALWAYS_GREEN, slowDownProbability, VEHICLES,
+    this.road1 = new Road(lanes, length, trafficLights, slowDownProbability, VEHICLES,
             VEHICLES_PROBABILITY, null, null, null, laneChanger, vehicleGenerator);
 
     road1.setNextRoad(this.road1);
@@ -54,6 +57,7 @@ public class TrafficSimulator implements Simulator {
 
   @Override
   public Set<Particle> simulate(final Criteria endCriteria, final ParticlesWriter writer) {
+    meanV = new ArrayList<>();
     Set<Particle> currentParticles;
     long iteration = 0;
     do {
@@ -91,7 +95,14 @@ public class TrafficSimulator implements Simulator {
       }
 
       System.out.println("--------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+
+      meanV.add(currentParticles.stream().mapToDouble(Particle::velocity).average().orElse(0));
+
     } while (!endCriteria.test(iteration, currentParticles));
     return currentParticles;
+  }
+
+  public List<Double> getMeanV() {
+    return meanV;
   }
 }

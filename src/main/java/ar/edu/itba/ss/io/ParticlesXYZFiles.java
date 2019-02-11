@@ -28,7 +28,6 @@ public class ParticlesXYZFiles {
           writer.write(
               particle.id() + "  "
                   + particle.length() * CELL_SIZE + "  "
-                  + particle.length() * CELL_SIZE + "  "
                   + (prevRoadLanesLength + particle.col()) * CELL_SIZE + "  "
                   + particle.row() * CELL_SIZE * (-1) + "  "
                   + particle.velocity() + "\n");

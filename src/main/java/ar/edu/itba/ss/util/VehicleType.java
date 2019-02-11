@@ -2,9 +2,9 @@ package ar.edu.itba.ss.util;
 
 public enum VehicleType {
 
-  MOTORCYCLE(1, 8),
-  CAR(2, 6),
-  TRUCK(4, 3);
+  MOTORCYCLE(1, 7),
+  CAR(2, 7),
+  TRUCK(4, 6);
 
   private final int length;
   private final int maxVelocity;

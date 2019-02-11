@@ -12,9 +12,9 @@ import java.util.function.BiFunction;
 
 public class Main {
 
-  private static final int N_VEHICLES = 80;
+  private static final int N_VEHICLES = 200;
   private static final int LANES = 5;
-  private static final int LANES_LENGTH = 150;
+  private static final int LANES_LENGTH = 400;
   private static final double SLOW_DOWN_P = 0.3;
   private static final BiFunction<Particle, Road, List<Particle>> LANE_CHANGER =
       new Tendency(0.3)::tendencyToAnywhere;
@@ -23,6 +23,8 @@ public class Main {
   public static void main(final String[] args) {
     final TrafficSimulator simulator =
         new TrafficSimulator(N_VEHICLES, LANES, LANES_LENGTH, SLOW_DOWN_P, LANE_CHANGER, VEHICLE_GENERATOR);
-    simulator.simulate(new StationaryStateCriteria(40, 0.2), new AppendFileParticlesWriter("traffic_simulation"));
+    simulator.simulate(new StationaryStateCriteria(20, 0.1), new AppendFileParticlesWriter("traffic_simulation"));
+
+    List<Double> meanV = simulator.getMeanV();
   }
 }

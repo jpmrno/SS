@@ -7,12 +7,7 @@ import ar.edu.itba.ss.model.generator.VehicleGenerator;
 import ar.edu.itba.ss.util.Either;
 import ar.edu.itba.ss.util.VehicleType;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.OptionalInt;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -22,7 +17,7 @@ public final class Road {
   private static final Random RANDOM = ThreadLocalRandom.current();
 
   private final Either<Particle, ParticleWrapper>[][] lanes;
-  private final TrafficLight trafficLight;
+  private final TrafficLight[] trafficLights;
   private Set<Particle> particles;
   private final double slowDownProbability;
   private Road prevRoad;
@@ -37,11 +32,11 @@ public final class Road {
   private final BiFunction<Particle, Road, List<Particle>> laneChanger;
   private final Set<Particle[]> newParticles;
 
-  public Road(final int lanes, final int length, final TrafficLight trafficLight, final double slowDownProbability,
+  public Road(final int lanes, final int length, final TrafficLight[] trafficLights, final double slowDownProbability,
               VehicleType[] vehicleTypes, double[] vehicleProbabilities, Road prevRoad, Road nextRoad,
               Consumer<Particle> onExit, BiFunction<Particle, Road, List<Particle>> laneChanger,
               final VehicleGenerator vehicleGenerator) {
-    this.trafficLight = trafficLight;
+    this.trafficLights = trafficLights;
     this.prevRoad = prevRoad;
     this.nextRoad = nextRoad;
     this.onExit = onExit;
@@ -156,7 +151,7 @@ public final class Road {
 
   public void timeLapse() {
     // traffic light
-    trafficLight.timeLapse();
+    Arrays.stream(trafficLights).forEach(TrafficLight::timeLapse);
 
     // change lanes
     for (final Particle particle : particles()) {
@@ -252,7 +247,7 @@ public final class Road {
 
     int distanceToEndOfSegment = laneLength() - col - length + 1;
     int distanceToEndOfSegmentWithTrafficLight =
-            distanceToEndOfSegment + trafficLight.currentStatus().additionalDistance();
+            distanceToEndOfSegment + trafficLights[lane].currentStatus().additionalDistance();
 
     if (nextRoad == null) {
       return OptionalInt.of(distanceToEndOfSegmentWithTrafficLight);
