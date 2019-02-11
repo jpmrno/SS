@@ -11,6 +11,7 @@ public final class TrafficLight {
   private int time;
 
   public static TrafficLight ALWAYS_GREEN = new TrafficLight(1,0,0, Status.GREEN);
+  public static TrafficLight ALWAYS_RED = new TrafficLight(0,0,1, Status.RED);
 
   public TrafficLight(final int greenTime, final int yellowTime, final int redTime, final Status currentStatus) {
     this.statusTimes = new HashMap<>();
