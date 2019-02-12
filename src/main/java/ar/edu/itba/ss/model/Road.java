@@ -32,6 +32,8 @@ public final class Road {
   private final BiFunction<Particle, Road, List<Particle>> laneChanger;
   private final Set<Particle[]> newParticles;
 
+  private List<Particle> particlesFlowed = new LinkedList<>();
+
   public Road(final int lanes, final int length, final TrafficLight[] trafficLights, final double slowDownProbability,
               VehicleType[] vehicleTypes, double[] vehicleProbabilities, Road prevRoad, Road nextRoad,
               Consumer<Particle> onExit, BiFunction<Particle, Road, List<Particle>> laneChanger,
@@ -150,6 +152,8 @@ public final class Road {
   }
 
   public void timeLapse() {
+    particlesFlowed.clear();
+
     // traffic light
     Arrays.stream(trafficLights).forEach(TrafficLight::timeLapse);
 
@@ -178,6 +182,7 @@ public final class Road {
 
         if (!isInsideRoad(newParticle) && onExit != null) {
           onExit.accept(newParticle);
+          particlesFlowed.add(newParticle);
         }
       }
     }
@@ -329,5 +334,9 @@ public final class Road {
 
   public void addVehiclesToBeCreated(int amount) {
     this.vehiclesToBeCreated += amount;
+  }
+
+  public List<Particle> getParticlesFlowed() {
+    return particlesFlowed;
   }
 }

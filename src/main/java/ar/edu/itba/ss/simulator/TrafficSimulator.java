@@ -25,7 +25,6 @@ public class TrafficSimulator implements Simulator {
   //  private static final VehicleType[] VEHICLES = new VehicleType[]{VehicleType.MOTORCYCLE};
 //  private static final double[] VEHICLES_PROBABILITY = new double[]{1};
   private final VehicleGenerator vehicleGenerator;
-
   private final Road road1;
 
   private List<Double> meanV;
@@ -59,7 +58,7 @@ public class TrafficSimulator implements Simulator {
   public Set<Particle> simulate(final Criteria endCriteria, final ParticlesWriter writer) {
     meanV = new ArrayList<>();
     Set<Particle> currentParticles;
-    long iteration = 0;
+    long iteration = 1;
     do {
       // en realidad deberia ser una lista de segmentos
       road1.setActualized(true);
@@ -70,7 +69,7 @@ public class TrafficSimulator implements Simulator {
 
       Either<Particle, ParticleWrapper>[][] lanes1 = road1.getLanes();
 
-      System.out.println("Iteration " + iteration++);
+      System.out.println("Iteration " + iteration);
 
       try {
         writer.write(iteration, Arrays.asList(road1));
@@ -98,7 +97,7 @@ public class TrafficSimulator implements Simulator {
 
       meanV.add(currentParticles.stream().mapToDouble(Particle::velocity).average().orElse(0));
 
-    } while (!endCriteria.test(iteration, currentParticles));
+    } while (!endCriteria.test(iteration++, currentParticles));
     return currentParticles;
   }
 
