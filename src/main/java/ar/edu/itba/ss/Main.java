@@ -1,6 +1,7 @@
 package ar.edu.itba.ss;
 
 import ar.edu.itba.ss.io.writer.AppendFileParticlesWriter;
+import ar.edu.itba.ss.io.writer.FlowWriter;
 import ar.edu.itba.ss.io.writer.FlowedParticlesWriter;
 import ar.edu.itba.ss.io.writer.MultiWriter;
 import ar.edu.itba.ss.io.writer.ParticlesWriter;
@@ -22,7 +23,7 @@ public class Main {
   private static final int LANES_LENGTH = 400; // 1KM
   private static final double SLOW_DOWN_P = 0.3;
   private static final BiFunction<Particle, Road, List<Particle>> LANE_CHANGER =
-      new Tendency(0.3)::tendencyToAnywhere;
+      new Tendency(0.1)::tendencyToLeft;
   private static final VehicleGenerator VEHICLE_GENERATOR = VehicleGenerator.perTypeMaxVelocity(1);
 
   public static void main(final String[] args) throws IOException {
@@ -30,10 +31,12 @@ public class Main {
         new TrafficSimulator(N_VEHICLES, LANES, LANES_LENGTH, SLOW_DOWN_P, LANE_CHANGER, VEHICLE_GENERATOR);
     final AppendFileParticlesWriter fileWriter = new AppendFileParticlesWriter("traffic_simulation");
     final AvgVelocityParticlesWriter avgVelocityWriter = new AvgVelocityParticlesWriter();
-    final FlowedParticlesWriter flowWriter = new FlowedParticlesWriter(20);
-    final ParticlesWriter writer = new MultiWriter(avgVelocityWriter, flowWriter);
+    final FlowWriter flowWriter = new FlowWriter(200);
+    final FlowedParticlesWriter flowedParticlesWriter = new FlowedParticlesWriter();
+    final ParticlesWriter writer = new MultiWriter(avgVelocityWriter, flowWriter, flowedParticlesWriter);
     simulator.simulate(new StationaryStateCriteria(5 * 60, 0.5), writer);
     avgVelocityWriter.writeToFile("avg_velocity");
     flowWriter.writeToFile("flow");
+    flowedParticlesWriter.writeToFile("flowed");
   }
 }

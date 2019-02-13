@@ -1,6 +1,5 @@
 package ar.edu.itba.ss.io.writer;
 
-import ar.edu.itba.ss.model.Particle;
 import ar.edu.itba.ss.model.Road;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -8,37 +7,19 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 public class FlowedParticlesWriter implements ParticlesWriter {
 
-  private final int dN;
-  private final Deque<Double> lastFlowsTimes;
-  private final Map<Integer, Double> flows;
-
-  public FlowedParticlesWriter(final int dN) {
-    this.dN = dN;
-    this.lastFlowsTimes = new ArrayDeque<>(dN);
-    this.flows = new HashMap<>();
-  }
+  private final List<Integer> flowedParticlesPerTime = new LinkedList<>();
+  private int flowedParticles = 0;
 
   @Override
-  public void write(final double time, final List<Road> roads) throws IOException {
+  public void write(final double time, final List<Road> roads) {
     final Road lastRoad = roads.get(roads.size() - 1);
-    final List<Particle> particlesFlowed = lastRoad.getParticlesFlowed();
-
-    for (final Particle ignored : particlesFlowed) {
-      lastFlowsTimes.addLast(time);
-      if (lastFlowsTimes.size() == dN) {
-        flows.put((int) time, dN / (lastFlowsTimes.getLast() - lastFlowsTimes.getFirst()));
-        lastFlowsTimes.removeFirst();
-      }
-    }
+    flowedParticles += lastRoad.getParticlesFlowed().size();
+    flowedParticlesPerTime.add(flowedParticles);
   }
 
   public void writeToFile(final String fileName) throws IOException {
@@ -46,8 +27,9 @@ public class FlowedParticlesWriter implements ParticlesWriter {
     Files.deleteIfExists(filePath);
     final Path file = Files.createFile(filePath);
     try (final BufferedWriter writer = Files.newBufferedWriter(file, StandardOpenOption.APPEND)) {
-      for (final Entry<Integer, Double> flows : flows.entrySet()) {
-        writer.write(flows.getKey() + ", " + flows.getValue() + "\n");
+      for (int i = 0; i < flowedParticlesPerTime.size(); i++) {
+        final int flowedParticles =  flowedParticlesPerTime.get(i);
+        writer.write(i + "," + flowedParticles + "\n");
       }
     }
   }
