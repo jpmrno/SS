@@ -18,12 +18,12 @@ import java.util.function.BiFunction;
 
 public class Main {
 
-  private static final int N_VEHICLES = 200;
+  private static final int N_VEHICLES = 100;
   private static final int LANES = 5;
-  private static final int LANES_LENGTH = 400; // 1KM
+  private static final int LANES_LENGTH = 160; // 1KM
   private static final double SLOW_DOWN_P = 0.3;
   private static final BiFunction<Particle, Road, List<Particle>> LANE_CHANGER =
-      new Tendency(0.1)::tendencyToLeft;
+      new Tendency(0.1)::tendencyToAnywhere;
   private static final VehicleGenerator VEHICLE_GENERATOR = VehicleGenerator.perTypeMaxVelocity(1);
 
   public static void main(final String[] args) throws IOException {
@@ -35,8 +35,9 @@ public class Main {
     final FlowedParticlesWriter flowedParticlesWriter = new FlowedParticlesWriter();
     final ParticlesWriter writer = new MultiWriter(avgVelocityWriter, flowWriter, flowedParticlesWriter);
     simulator.simulate(new StationaryStateCriteria(5 * 60, 0.5), writer);
-    avgVelocityWriter.writeToFile("avg_velocity");
-    flowWriter.writeToFile("flow");
-    flowedParticlesWriter.writeToFile("flowed");
+    int time = 3;
+    avgVelocityWriter.writeToFile("avg_velocity" + time);
+    flowWriter.writeToFile("flow" + time);
+    flowedParticlesWriter.writeToFile("flowed" + time);
   }
 }

@@ -225,7 +225,7 @@ public final class Road {
 
   private Particle laneChange(final Particle particle) {
     for (Particle newParticle : laneChanger.apply(particle, this)) {
-      if (isInsideRoad(newParticle) && isLaneChangePossible(newParticle, newParticle.maxVelocity(),
+      if (isInsideRoad(newParticle) && isLaneChangePossible(newParticle, newParticle.velocity(),
               newParticle.velocity())) {
         return newParticle;
       }
